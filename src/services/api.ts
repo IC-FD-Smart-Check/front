@@ -21,8 +21,15 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      // Só redireciona se não estiver na página de login ou forgot-password
+      const currentPath = window.location.pathname;
+      const isAuthPage = currentPath === '/login' || currentPath === '/forgot-password';
+      
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      
+      if (!isAuthPage) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

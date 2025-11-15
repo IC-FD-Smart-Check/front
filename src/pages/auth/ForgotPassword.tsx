@@ -9,17 +9,17 @@ import type { ForgotPasswordRequest } from '@/types';
 
 const ForgotPassword: React.FC = () => {
   const { forgotPassword, loading, error, clearError } = useAuth();
-  const [ra, setRa] = useState('');
+  const [email, setEmail] = useState('');
   const [success, setSuccess] = useState(false);
   const [validationError, setValidationError] = useState('');
 
   const validate = (): boolean => {
-    if (!ra) {
-      setValidationError('RA é obrigatório');
+    if (!email) {
+      setValidationError('Email é obrigatório');
       return false;
     }
-    if (!/^\d{6,}$/.test(ra)) {
-      setValidationError('RA deve conter apenas números (mínimo 6 dígitos)');
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setValidationError('Email inválido');
       return false;
     }
     setValidationError('');
@@ -31,7 +31,7 @@ const ForgotPassword: React.FC = () => {
     
     if (!validate()) return;
 
-    const request: ForgotPasswordRequest = { ra };
+    const request: ForgotPasswordRequest = { email };
     const success = await forgotPassword(request);
     if (success) {
       setSuccess(true);
@@ -66,7 +66,7 @@ const ForgotPassword: React.FC = () => {
           <Logo />
           <h2 className="text-2xl font-bold text-gray-900 mt-4 mb-2">Esqueceu a senha?</h2>
           <p className="text-sm text-gray-600">
-            Digite seu RA para solicitar a redefinição de senha
+            Digite seu email para solicitar a redefinição de senha
           </p>
         </div>
 
@@ -80,12 +80,12 @@ const ForgotPassword: React.FC = () => {
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" size={20} />
             <Input
-              type="text"
-              name="ra"
-              placeholder="Digite seu RA"
-              value={ra}
+              type="email"
+              name="email"
+              placeholder="seu.email@instituicao.edu.br"
+              value={email}
               onChange={(e) => {
-                setRa(e.target.value);
+                setEmail(e.target.value);
                 clearError();
                 setValidationError('');
               }}

@@ -7,8 +7,8 @@ import type { LoginRequest, LoginResponse, ForgotPasswordRequest, User } from '.
  * Este serviço está configurado para funcionar SEM backend.
  * 
  * Para testar:
- * - RA: qualquer número com 6+ dígitos (ex: 123456, 987654)
- * - RA Admin: 000000, 000123, 123456 (serão admin)
+ * - Email: qualquer email válido (ex: user@test.com)
+ * - Email Admin: admin@instituicao.edu.br ou qualquer email com 'admin'
  * - Senha: qualquer texto com 6+ caracteres
  * 
  * Quando tiver o backend, descomente o código real nos métodos.
@@ -25,43 +25,42 @@ class AuthService {
    */
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     // Simula delay da API
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Login mockado - aceita qualquer RA com 6+ dígitos e senha com 6+ caracteres
-    if (!/^\d{6,}$/.test(credentials.ra)) {
-      throw new Error('RA deve conter apenas números (mínimo 6 dígitos)');
-    }
+    // // Login mockado - aceita email válido e senha com 6+ caracteres
+    // if (!/\S+@\S+\.\S+/.test(credentials.email)) {
+    //   throw new Error('Email inválido');
+    // }
 
-    if (credentials.password.length < 6) {
-      throw new Error('Senha deve ter no mínimo 6 caracteres');
-    }
+    // if (credentials.password.length < 6) {
+    //   throw new Error('Senha deve ter no mínimo 6 caracteres');
+    // }
 
-    // Simula diferentes tipos de usuários baseado no RA
-    const isAdmin = credentials.ra.startsWith('000') || credentials.ra === '123456';
+    // // Simula diferentes tipos de usuários baseado no email
+    // const isAdmin = credentials.email.includes('admin') || credentials.email === 'admin@instituicao.edu.br';
     
-    const mockUser: User = {
-      id: `user_${credentials.ra}`,
-      ra: credentials.ra,
-      name: isAdmin ? 'Administrador Sistema' : `Estudante ${credentials.ra}`,
-      email: `${credentials.ra}@instituicao.edu.br`,
-      role: isAdmin ? 'ADMIN' : 'STUDENT'
-    };
+    // const mockUser: User = {
+    //   id: `user_${credentials.email.split('@')[0]}`,
+    //   email: credentials.email,
+    //   name: isAdmin ? 'Administrador Sistema' : `Usuário ${credentials.email.split('@')[0]}`,
+    //   role: isAdmin ? 'ADMIN' : 'STUDENT'
+    // };
 
-    const mockToken = `mock_token_${credentials.ra}_${Date.now()}`;
+    // const mockToken = `mock_token_${credentials.email.split('@')[0]}_${Date.now()}`;
 
-    const response: LoginResponse = {
-      token: mockToken,
-      user: mockUser
-    };
+    // const response: LoginResponse = {
+    //   token: mockToken,
+    //   user: mockUser
+    // };
 
-    // Salvar no localStorage
-    this.setTokens(response.token);
-    this.setUser(response.user);
+    // // Salvar no localStorage
+    // this.setTokens(response.token);
+    // this.setUser(response.user);
 
-    return response;
+    // return response;
 
     // CÓDIGO REAL COMENTADO PARA QUANDO TIVER BACKEND:
-    /*
+    
     try {
       const response = await api.post<LoginResponse>('/auth/login', credentials);
       
@@ -74,10 +73,11 @@ class AuthService {
       return response.data;
     } catch (error: any) {
       throw new Error(
-        error.response?.data?.message || 'Erro ao fazer login. Verifique seu RA e senha.'
+        error.response?.data?.message || 'Erro ao fazer login. Verifique seu email e senha.'
       );
     }
-    */
+
+    
   }
 
   /**
@@ -88,12 +88,12 @@ class AuthService {
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     // Validação mockada
-    if (!/^\d{6,}$/.test(data.ra)) {
-      throw new Error('RA deve conter apenas números (mínimo 6 dígitos)');
+    if (!/\S+@\S+\.\S+/.test(data.email)) {
+      throw new Error('Email inválido');
     }
 
     // Simula sucesso sempre
-    console.log(`[MOCK] Solicitação de recuperação enviada para RA: ${data.ra}`);
+    console.log(`[MOCK] Solicitação de recuperação enviada para email: ${data.email}`);
 
     // CÓDIGO REAL COMENTADO PARA QUANDO TIVER BACKEND:
     /*

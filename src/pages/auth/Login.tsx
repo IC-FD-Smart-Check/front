@@ -12,11 +12,11 @@ const Login: React.FC = () => {
   const { login, loading, error, clearError } = useAuth();
   
   const [formData, setFormData] = useState<LoginRequest>({
-    ra: '',
+    email: '',
     password: '',
   });
   
-  const [errors, setErrors] = useState({ ra: '', password: '' });
+  const [errors, setErrors] = useState({ email: '', password: '' });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -26,14 +26,14 @@ const Login: React.FC = () => {
   };
 
   const validate = (): boolean => {
-    const newErrors = { ra: '', password: '' };
+    const newErrors = { email: '', password: '' };
     let isValid = true;
 
-    if (!formData.ra) {
-      newErrors.ra = 'RA é obrigatório';
+    if (!formData.email) {
+      newErrors.email = 'Email é obrigatório';
       isValid = false;
-    } else if (!/^\d{6,}$/.test(formData.ra)) {
-      newErrors.ra = 'RA deve conter apenas números (mínimo 6 dígitos)';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email inválido';
       isValid = false;
     }
 
@@ -79,12 +79,12 @@ const Login: React.FC = () => {
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" size={20} />
             <Input
-              type="text"
-              name="ra"
-              placeholder="Digite seu RA"
-              value={formData.ra}
+              type="email"
+              name="email"
+              placeholder="seu.email@instituicao.edu.br"
+              value={formData.email}
               onChange={handleChange}
-              error={errors.ra}
+              error={errors.email}
               disabled={loading}
               className="pl-11"
             />

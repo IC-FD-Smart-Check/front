@@ -1,13 +1,12 @@
 export interface User {
   id: string;
-  ra: string;
-  email?: string;
+  email: string;
   name: string;
   role: 'STUDENT' | 'ADMIN';
 }
 
 export interface LoginRequest {
-  ra: string;
+  email: string;
   password: string;
 }
 
@@ -17,5 +16,5 @@ export interface LoginResponse {
 }
 
 export interface ForgotPasswordRequest {
-  ra: string;
+  email: string;
 }

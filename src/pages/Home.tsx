@@ -37,7 +37,7 @@ const Home: React.FC = () => {
       <div className="flex justify-between items-start mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Olá, {user?.name?.split(' ')[0] || 'Usuário'}! 👋
+            Olá, {user?.name?.split(' ')[0] || 'Usuário'}!
           </h1>
           <p className="text-gray-600">
             {user?.role === 'ADMIN'
