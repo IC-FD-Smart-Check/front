@@ -1,19 +1,6 @@
 import api from './api';
 import type { LoginRequest, LoginResponse, ForgotPasswordRequest, User } from '../types';
 
-/**
- * 🚧 MODO DESENVOLVIMENTO - LOGIN MOCKADO 🚧
- * 
- * Este serviço está configurado para funcionar SEM backend.
- * 
- * Para testar:
- * - Email: qualquer email válido (ex: user@test.com)
- * - Email Admin: admin@instituicao.edu.br ou qualquer email com 'admin'
- * - Senha: qualquer texto com 6+ caracteres
- * 
- * Quando tiver o backend, descomente o código real nos métodos.
- */
-
 class AuthService {
   private readonly STORAGE_KEYS = {
     TOKEN: 'token',
@@ -21,51 +8,13 @@ class AuthService {
   };
 
   /**
-   * Realiza o login do usuário (MOCKADO PARA DESENVOLVIMENTO)
+   * Realiza o login do usuário
    */
   async login(credentials: LoginRequest): Promise<LoginResponse> {
-    // Simula delay da API
-    // await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // // Login mockado - aceita email válido e senha com 6+ caracteres
-    // if (!/\S+@\S+\.\S+/.test(credentials.email)) {
-    //   throw new Error('Email inválido');
-    // }
-
-    // if (credentials.password.length < 6) {
-    //   throw new Error('Senha deve ter no mínimo 6 caracteres');
-    // }
-
-    // // Simula diferentes tipos de usuários baseado no email
-    // const isAdmin = credentials.email.includes('admin') || credentials.email === 'admin@instituicao.edu.br';
-    
-    // const mockUser: User = {
-    //   id: `user_${credentials.email.split('@')[0]}`,
-    //   email: credentials.email,
-    //   name: isAdmin ? 'Administrador Sistema' : `Usuário ${credentials.email.split('@')[0]}`,
-    //   role: isAdmin ? 'ADMIN' : 'STUDENT'
-    // };
-
-    // const mockToken = `mock_token_${credentials.email.split('@')[0]}_${Date.now()}`;
-
-    // const response: LoginResponse = {
-    //   token: mockToken,
-    //   user: mockUser
-    // };
-
-    // // Salvar no localStorage
-    // this.setTokens(response.token);
-    // this.setUser(response.user);
-
-    // return response;
-
-    // CÓDIGO REAL COMENTADO PARA QUANDO TIVER BACKEND:
-    
     try {
       const response = await api.post<LoginResponse>('/auth/login', credentials);
       
       if (response.data) {
-        // Salvar no localStorage
         this.setTokens(response.data.token);
         this.setUser(response.data.user);
       }
@@ -76,27 +25,12 @@ class AuthService {
         error.response?.data?.message || 'Erro ao fazer login. Verifique seu email e senha.'
       );
     }
-
-    
   }
 
   /**
-   * Solicita recuperação de senha (MOCKADO PARA DESENVOLVIMENTO)
+   * Solicita recuperação de senha
    */
   async forgotPassword(data: ForgotPasswordRequest): Promise<void> {
-    // Simula delay da API
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    // Validação mockada
-    if (!/\S+@\S+\.\S+/.test(data.email)) {
-      throw new Error('Email inválido');
-    }
-
-    // Simula sucesso sempre
-    console.log(`[MOCK] Solicitação de recuperação enviada para email: ${data.email}`);
-
-    // CÓDIGO REAL COMENTADO PARA QUANDO TIVER BACKEND:
-    /*
     try {
       await api.post('/auth/forgot-password', data);
     } catch (error: any) {
@@ -104,21 +38,12 @@ class AuthService {
         error.response?.data?.message || 'Erro ao enviar solicitação. Tente novamente.'
       );
     }
-    */
   }
 
   /**
-   * Realiza logout do usuário (MOCKADO PARA DESENVOLVIMENTO)
+   * Realiza logout do usuário
    */
   async logout(): Promise<void> {
-    // Simula delay da API
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    console.log('[MOCK] Logout realizado');
-    this.clearAuthData();
-
-    // CÓDIGO REAL COMENTADO PARA QUANDO TIVER BACKEND:
-    /*
     try {
       // Chama endpoint de logout no backend (opcional)
       await api.post('/auth/logout');
@@ -128,7 +53,6 @@ class AuthService {
     } finally {
       this.clearAuthData();
     }
-    */
   }
 
   /**
