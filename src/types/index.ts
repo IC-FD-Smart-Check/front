@@ -18,3 +18,19 @@ export interface LoginResponse {
 export interface ForgotPasswordRequest {
   email: string;
 }
+
+export interface UserRequest {
+  name: string;
+  email: string;
+  password: string;
+  role: 'STUDENT' | 'ADMIN';
+}
+
+export interface UserResponse {
+  id: string;
+  name: string;
+  email: string;
+  role: 'STUDENT' | 'ADMIN';
+  createdAt?: string;
+  updatedAt?: string;
+}
