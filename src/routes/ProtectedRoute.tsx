@@ -37,7 +37,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ config }) => {
     return (
       <div className="flex min-h-screen bg-gray-50">
         <Sidebar />
-        <main className="flex-1 ml-72 p-8">
+        <main className="flex-1 lg:ml-72 p-8">
           <Component />
         </main>
       </div>

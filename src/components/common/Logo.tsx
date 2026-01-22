@@ -4,7 +4,7 @@ const Logo: React.FC = () => {
   return (
     <div>
       <h1 className="text-2xl font-bold text-primary">
-        FD SmartCheck
+        <img src="/logo.png" alt="" />
       </h1>
     </div>
   );

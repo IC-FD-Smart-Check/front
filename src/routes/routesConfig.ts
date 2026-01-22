@@ -3,6 +3,7 @@ import ForgotPassword from '@/pages/auth/ForgotPassword';
 import Home from '@/pages/Home';
 import UsersList from '@/pages/UsersList';
 import type { ComponentType } from 'react';
+import Check from '@/pages/check/check';
 
 export interface RouteConfig {
   path: string;
@@ -49,6 +50,12 @@ export const routesConfig: RouteConfig[] = [
     isPrivate: true,
     layout: true,
     roles: ['ADMIN'],
+  },{
+    path: '/check',
+    component: Check,
+    isPrivate: true,
+    layout: true,
+    roles: ['STUDENT', 'ADMIN'],
   },
 
   // Rotas que serão adicionadas futuramente

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
 import Logo from '@/components/common/Logo';
@@ -10,6 +10,7 @@ import type { LoginRequest } from '@/types';
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login, loading, error, clearError } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
   
   const [formData, setFormData] = useState<LoginRequest>({
     email: '',
@@ -64,7 +65,11 @@ const Login: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-300 p-5">
       <div className="bg-white rounded-2xl shadow-2xl p-12 w-full max-w-md">
         <div className="text-center mb-8">
-          <Logo />
+          <div className='flex justify-center items-center'>
+            <div className='w-48'>
+              <Logo />
+            </div>
+          </div>
           <h2 className="text-2xl font-bold text-gray-900 mt-4 mb-2">Bem-vindo de volta</h2>
           <p className="text-sm text-gray-600">Faça login para continuar</p>
         </div>
@@ -93,15 +98,23 @@ const Login: React.FC = () => {
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" size={20} />
             <Input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               name="password"
               placeholder="Digite sua senha"
               value={formData.password}
               onChange={handleChange}
               error={errors.password}
               disabled={loading}
-              className="pl-11"
+              className="pl-11 pr-11"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+              disabled={loading}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
           </div>
 
           <div className="flex justify-end -mt-2">
