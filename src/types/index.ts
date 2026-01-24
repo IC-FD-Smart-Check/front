@@ -35,6 +35,76 @@ export interface UserResponse {
   updatedAt?: string;
 }
 
+// Event types
+export interface EventRequest {
+  title: string;
+  description?: string;
+  latitude?: number;
+  longitude?: number;
+  radius?: number; // Raio em metros
+  startDate: string; // ISO 8601 format
+  endDate: string; // ISO 8601 format
+}
+
+export interface EventResponse {
+  id: string;
+  title: string;
+  description?: string;
+  latitude?: number;
+  longitude?: number;
+  radius?: number; // Raio em metros
+  startDate: string;
+  endDate: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// SubEvent types
+export interface SubEventRequest {
+  title: string;
+  description?: string;
+  latitude?: number;
+  longitude?: number;
+  radius?: number;
+  locationDescription?: string;
+  startDate: string; // ISO 8601 format
+  endDate: string; // ISO 8601 format
+  checkinStart: string; // ISO 8601 format
+  checkinEnd: string; // ISO 8601 format
+  checkoutStart: string; // ISO 8601 format
+  checkoutEnd: string; // ISO 8601 format
+  eventId: string;
+}
+
+export interface SubEventResponse {
+  id: string;
+  title: string;
+  description?: string;
+  latitude?: number;
+  longitude?: number;
+  radius?: number;
+  locationDescription?: string;
+  startDate: string;
+  endDate: string;
+  checkinStart: string;
+  checkinEnd: string;
+  checkoutStart: string;
+  checkoutEnd: string;
+  eventId: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// QRCode types
+export interface QRCodeResponse {
+  id: string;
+  codeData: string;
+  subEventId: string;
+  subEventTitle: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
 // Check-in types
 export interface EventInfo {
   id: string;

@@ -20,7 +20,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
       // Só redireciona se não estiver na página de login ou forgot-password
       const currentPath = window.location.pathname;
       const isAuthPage = currentPath === '/login' || currentPath === '/forgot-password';

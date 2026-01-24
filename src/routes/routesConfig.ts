@@ -4,6 +4,8 @@ import Home from '@/pages/Home';
 import UsersList from '@/pages/UsersList';
 import type { ComponentType } from 'react';
 import Check from '@/pages/check/check';
+import Event from '@/pages/Event/Event.tsx';
+import SubEventList from '@/pages/SubEvent/SubEventList';
 
 export interface RouteConfig {
   path: string;
@@ -50,12 +52,27 @@ export const routesConfig: RouteConfig[] = [
     isPrivate: true,
     layout: true,
     roles: ['ADMIN'],
-  },{
+  },
+  {
     path: '/check',
     component: Check,
     isPrivate: true,
     layout: true,
     roles: ['STUDENT', 'ADMIN'],
+  },
+  {
+    path: '/events',
+    component: Event,
+    isPrivate: true,
+    layout: true,
+    roles: ['ADMIN'],
+  },
+  {
+    path: '/events/:eventId/subevents',
+    component: SubEventList,
+    isPrivate: true,
+    layout: true,
+    roles: ['ADMIN'],
   },
 
   // Rotas que serão adicionadas futuramente
