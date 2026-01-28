@@ -1,105 +1,84 @@
 import api from './api';
+import { geoSecurity, GeolocationError } from '@/utils/geoSecurity';
 import {
-  ValidateQRRequest,
-  ValidateQRResponse,
-  CheckInRequest,
-  CheckInResponse,
-  CheckHistoryResponse,
   CheckInfoResponse,
+  CheckRequest,
+  CheckResponse,
+  CheckHistoryResponse,
 } from '@/types';
 
 export const checkService = {
   /**
-   * Valida um QR code e retorna informações completas do evento
+   * Valida QR Code e retorna informações do evento
    */
-  validateQRCode: async (request: ValidateQRRequest): Promise<CheckInfoResponse> => {
-    const response = await api.get<CheckInfoResponse>('/checkin/info', { params: request });
+  getCheckInfo: async (qrCode: string): Promise<CheckInfoResponse> => {
+    const response = await api.get<CheckInfoResponse>('/checkin/info', {
+      params: { qrCode },
+    });
     return response.data;
   },
 
   /**
-   * Realiza check-in em um evento
+   * Realiza check-in ou checkout com geolocalização segura
    */
-  checkIn: async (request: CheckInRequest): Promise<CheckInResponse> => {
-    // Mock temporário - substituir com chamada real à API
-    // await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // return {
-    //   id: '1',
-    //   eventId: request.qrCode,
-    //   studentId: 'student-1',
-    //   checkInTime: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-    //   message: 'Check-in realizado com sucesso!',
-    // };
-    
-    //Implementação real (comentada)
-    const response = await api.post<CheckInResponse>('/checkin', request);
+  performCheck: async (qrCode: string, type: 'CHECKIN' | 'CHECKOUT'): Promise<CheckResponse> => {
+    try {
+      // 1. Capturar geolocalização segura
+      const { geoPayload, signature } = await geoSecurity.createSecureRequest();
+
+      // 2. Criar requisição
+      const request: CheckRequest = {
+        qrCode,
+        type,
+        geoPayload,
+        signature,
+      };
+
+      // 3. Enviar ao backend
+      const response = await api.post<CheckResponse>('/checkin', request);
+      return response.data;
+    } catch (error) {
+      if (error instanceof GeolocationError) {
+        throw new Error(error.message);
+      }
+      throw error;
+    }
+  },
+
+  /**
+   * Busca histórico de checks do usuário autenticado
+   */
+  getHistory: async (): Promise<CheckHistoryResponse> => {
+    const response = await api.get<CheckHistoryResponse>('/checkin/history');
     return response.data;
   },
 
-
+  /**
+   * Busca checks de um evento específico (ADMIN)
+   */
+  getEventChecks: async (eventId: string): Promise<CheckHistoryResponse> => {
+    const response = await api.get<CheckHistoryResponse>(`/checkin/event/${eventId}`);
+    return response.data;
+  },
 
   /**
-   * Busca histórico de check-ins (Student ou Admin baseado no token)
-   * O backend retorna dados diferentes dependendo do role do usuário
+   * Verifica suporte e permissão de geolocalização
    */
-  getCheckHistory: async (params?: {
-    eventId?: string;
-    studentId?: string;
-    startDate?: string;
-    endDate?: string;
-  }): Promise<CheckHistoryResponse> => {
-    // Mock temporário - substituir com chamada real à API
-    // await new Promise(resolve => setTimeout(resolve, 500));
+  checkGeolocation: async (): Promise<{
+    supported: boolean;
+    permission: PermissionState | null;
+  }> => {
+    const supported = geoSecurity.isSupported();
     
-    // const records = [
-    //   {
-    //     id: '1',
-    //     parentEvent: 'Semana Acadêmica 2026',
-    //     eventName: 'Workshop de React',
-    //     studentName: 'João Silva',
-    //     studentEmail: 'joao@example.com',
-    //     date: '22/01/2026',
-    //     checkInTime: '14:05',
-    //     checkOutTime: '16:10',
-    //     location: 'Sala 101',
-    //   },
-    //   {
-    //     id: '2',
-    //     parentEvent: 'Semana Acadêmica 2026',
-    //     eventName: 'Palestra sobre TypeScript',
-    //     studentName: 'Maria Santos',
-    //     studentEmail: 'maria@example.com',
-    //     date: '22/01/2026',
-    //     checkInTime: '14:02',
-    //     checkOutTime: '16:00',
-    //     location: 'Auditório Principal',
-    //   },
-    //   {
-    //     id: '3',
-    //     parentEvent: 'Hackathon 2026',
-    //     eventName: 'Abertura do Evento',
-    //     studentName: 'Pedro Costa',
-    //     studentEmail: 'pedro@example.com',
-    //     date: '22/01/2026',
-    //     checkInTime: '14:15',
-    //     checkOutTime: undefined,
-    //     location: 'Lab de Informática',
-    //   },
-    // ];
-    
-    // return {
-    //   records,
-    //   totalEvents: records.length,
-    //   totalCheckIns: records.filter(r => r.checkInTime).length,
-    //   totalCheckOuts: records.filter(r => r.checkOutTime).length,
-    //   totalCheckins: records.length,
-    //   presentCount: records.filter(r => r.checkInTime).length,
-    //   checkoutCount: records.filter(r => r.checkOutTime).length,
-    // };
-    
-    // Implementação real (comentada)
-    const response = await api.get<CheckHistoryResponse>('/checkin/history', { params });
-    return response.data;
+    if (!supported) {
+      return { supported: false, permission: null };
+    }
+
+    try {
+      const permission = await geoSecurity.requestPermission();
+      return { supported: true, permission };
+    } catch {
+      return { supported: true, permission: null };
+    }
   },
 };

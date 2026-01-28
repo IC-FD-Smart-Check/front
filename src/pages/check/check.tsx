@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuthStore } from '@/store/authStore';
-import StudentCheck from '@/components/check/StudentCheck';
-import AdminCheck from '@/components/check/AdminCheck';
+import StudentCheck from '@/components/check/student/StudentCheck';
+import AdminCheck from '@/components/check/admin/AdminCheck';
 
 const Check: React.FC = () => {
   const { user } = useAuthStore();

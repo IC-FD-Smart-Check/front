@@ -203,13 +203,6 @@ const QRCodeManager: React.FC<QRCodeManagerProps> = ({
 
                     {/* Informações e ações */}
                     <div className="flex-1 space-y-4">
-                      <div className="bg-white rounded-lg p-4 border border-green-200">
-                        <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Código</p>
-                        <p className="text-sm font-mono text-gray-800 break-all leading-relaxed">
-                          {activeQRCode.codeData}
-                        </p>
-                      </div>
-
                       <div className="flex flex-wrap gap-3">
                         <button
                           onClick={() => downloadQRCode(activeQRCode.codeData)}
@@ -252,9 +245,6 @@ const QRCodeManager: React.FC<QRCodeManagerProps> = ({
                               </span>
                               <p className="text-sm text-gray-600">Gerado em {formatDate(qrCode.createdAt)}</p>
                             </div>
-                            <p className="text-sm font-mono text-gray-700 break-all bg-white px-3 py-2 rounded border border-gray-200">
-                              {qrCode.codeData}
-                            </p>
                           </div>
                           <button
                             onClick={() => handleActivate(qrCode.id)}

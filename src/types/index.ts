@@ -41,9 +41,8 @@ export interface EventRequest {
   description?: string;
   latitude?: number;
   longitude?: number;
-  radius?: number; // Raio em metros
-  startDate: string; // ISO 8601 format
-  endDate: string; // ISO 8601 format
+  startDate: string;
+  endDate: string;
 }
 
 export interface EventResponse {
@@ -52,7 +51,6 @@ export interface EventResponse {
   description?: string;
   latitude?: number;
   longitude?: number;
-  radius?: number; // Raio em metros
   startDate: string;
   endDate: string;
   createdAt?: string;
@@ -67,12 +65,12 @@ export interface SubEventRequest {
   longitude?: number;
   radius?: number;
   locationDescription?: string;
-  startDate: string; // ISO 8601 format
-  endDate: string; // ISO 8601 format
-  checkinStart: string; // ISO 8601 format
-  checkinEnd: string; // ISO 8601 format
-  checkoutStart: string; // ISO 8601 format
-  checkoutEnd: string; // ISO 8601 format
+  startDate: string;
+  endDate: string;
+  checkinStart: string;
+  checkinEnd: string;
+  checkoutStart: string;
+  checkoutEnd: string;
   eventId: string;
 }
 
@@ -91,6 +89,7 @@ export interface SubEventResponse {
   checkoutStart: string;
   checkoutEnd: string;
   eventId: string;
+  eventTitle: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -105,25 +104,46 @@ export interface QRCodeResponse {
   createdAt: string;
 }
 
-// Check-in types
-export interface EventInfo {
-  id: string;
-  name: string;
-  parentEvent: string;
-  date: string;
-  location: string;
-  startTime: string;
-  endTime: string;
-  hasCheckedIn: boolean;
+// GEOLOCALIZAÇÃO SEGURA
+export interface GeoPayload {
+  latitude: number;
+  longitude: number;
+  timestamp: number;
+  deviceId: string;
 }
 
+// CHECK-IN REQUEST (NOVA ESTRUTURA)
+export interface CheckRequest {
+  qrCode: string;
+  type: 'CHECKIN' | 'CHECKOUT';
+  geoPayload: GeoPayload;
+  signature: string;
+}
+
+// CHECK-IN RESPONSE
+export interface CheckResponse {
+  id: string;
+  eventId: string;
+  eventTitle: string;
+  subEventId: string;
+  subEventTitle: string;
+  userId: string;
+  userName: string;
+  type: 'CHECKIN' | 'CHECKOUT';
+  checkinTime: string | null;
+  checkoutTime: string | null;
+  createdAt: string;
+  message: string;
+}
+
+// CHECK INFO (QR CODE VALIDATION)
 export interface CheckInfoResponse {
-  // Informações do Evento
+  // Evento
   eventId: string;
   eventTitle: string;
   eventDescription: string;
   
-  // Informações do SubEvento
+  // SubEvento
   subEventId: string;
   subEventTitle: string;
   subEventDescription: string;
@@ -131,19 +151,17 @@ export interface CheckInfoResponse {
   startDate: string;
   endDate: string;
   
-  // Janelas de Check-in/Checkout
+  // Janelas
   checkinStart: string;
   checkinEnd: string;
   checkoutStart: string;
   checkoutEnd: string;
   
-  // Ação que o usuário deve realizar
-  actionType: 'CHECKIN' | 'CHECKOUT';
-  
-  // Mensagem explicativa
+  // Ação
+  actionType: 'CHECKIN' | 'CHECKOUT' | 'COMPLETED';
   message: string;
   
-  // Status do check anterior (se houver)
+  // Status
   hasCheckedIn: boolean;
   checkinTime: string | null;
   hasCheckedOut: boolean;
@@ -154,56 +172,7 @@ export interface CheckInfoResponse {
   validationMessage: string | null;
 }
 
-export interface CheckRecord {
-  id: string;
-  eventId: string;
-  eventTitle: string;
-  subEventId: string;
-  subEventTitle: string;
-  userId: string;
-  userName: string;
-  type: 'CHECKIN' | 'CHECKOUT';
-  checkinTime: string | null;
-  checkoutTime: string | null;
-  createdAt: string;
-  message?: string;
-}
-
-export interface ValidateQRRequest {
-  qrCode: string;
-}
-
-export interface ValidateQRResponse {
-  eventInfo?: EventInfo; // Manter para compatibilidade
-  checkInfo?: CheckInfoResponse; // Nova resposta completa
-}
-
-export interface CheckInRequest {
-  qrCode: string;
-  type: 'CHECKIN' | 'CHECKOUT';
-  latitude: number;
-  longitude: number;
-}
-
-export interface CheckInResponse {
-  id: string;
-  eventId: string;
-  eventTitle: string;
-  userId: string;
-  userName: string;
-  type: 'CHECKIN' | 'CHECKOUT';
-  checkinTime: string | null;
-  checkoutTime: string | null;
-  createdAt: string;
-  message: string;
-}
-
+// HISTÓRICO
 export interface CheckHistoryResponse {
-  records?: CheckRecord[];
-  totalEvents?: number;
-  totalCheckIns?: number;
-  totalCheckOuts?: number;
-  totalCheckins?: number;
-  presentCount?: number;
-  checkoutCount?: number;
+  records: CheckResponse[];
 }
