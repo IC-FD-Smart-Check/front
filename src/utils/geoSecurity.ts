@@ -71,7 +71,16 @@ export const geoSecurity = {
    * Cria assinatura criptográfica do payload
    */
   signPayload: (payload: GeoPayload): string => {
-    const data = JSON.stringify(payload);
+    // Ordenando as chaves para bater com o Backend Java
+    const sortedPayload = Object.keys(payload)
+      .sort()
+      .reduce((result: any, key) => {
+        result[key] = (payload as any)[key as keyof GeoPayload];
+        return result;
+      }, {});
+
+    const data = JSON.stringify(sortedPayload);
+
     return crypto.generateHMAC(data);
   },
 
