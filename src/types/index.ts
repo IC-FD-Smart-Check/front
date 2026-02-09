@@ -39,6 +39,7 @@ export interface UserResponse {
 export interface EventRequest {
   title: string;
   description?: string;
+  imageBase64?: string;
   latitude?: number;
   longitude?: number;
   startDate: string;
@@ -49,6 +50,7 @@ export interface EventResponse {
   id: string;
   title: string;
   description?: string;
+  imageBase64?: string;
   latitude?: number;
   longitude?: number;
   startDate: string;
