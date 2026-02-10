@@ -30,4 +30,9 @@ export const eventService = {
   deleteEvent: async (id: string): Promise<void> => {
     await api.delete(`/events/${id}`);
   },
+
+  getUpcoming: async (): Promise<EventResponse[]> => {
+    const response = await api.get<EventResponse[]>('/events/upcoming');
+    return response.data;
+  },
 };
