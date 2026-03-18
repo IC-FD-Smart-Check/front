@@ -2,7 +2,7 @@ import CryptoJS from 'crypto-js';
 
 /**
  * Chave secreta compartilhada com o backend
- * ⚠️ IMPORTANTE: Esta deve ser a MESMA chave do application.properties
+ * IMPORTANTE: Esta deve ser a MESMA chave do application.properties
  * Em produção, deve vir de variável de ambiente
  */
 const SECRET_KEY = import.meta.env.VITE_GEO_SECRET_KEY || 'CHANGE_THIS_IN_PRODUCTION_USE_STRONG_KEY';

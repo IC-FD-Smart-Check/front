@@ -78,11 +78,11 @@ const EventForm: React.FC<EventFormProps> = ({
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
-  // Converte datetime-local para ISO 8601
+  // Converte datetime-local para naive datetime string (sem timezone)
+  // Envia como "2026-03-18T14:30:00" — o backend trata tudo como America/Sao_Paulo
   const formatToISO = (dateTimeLocal: string): string => {
     if (!dateTimeLocal) return "";
-    const date = new Date(dateTimeLocal);
-    return date.toISOString();
+    return dateTimeLocal.length === 16 ? `${dateTimeLocal}:00` : dateTimeLocal;
   };
 
   const validate = (): boolean => {

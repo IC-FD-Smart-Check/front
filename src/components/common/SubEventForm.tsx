@@ -61,18 +61,12 @@ const SubEventForm: React.FC<SubEventFormProps> = ({
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
-  // Converte datetime-local para ISO 8601
+  // Converte datetime-local para naive datetime string (sem timezone)
+  // Envia como "2026-03-18T14:30:00" — o backend trata tudo como America/Sao_Paulo
   const formatToISO = (dateTimeLocal: string): string => {
     if (!dateTimeLocal) return '';
-    const date = new Date(dateTimeLocal);
-    
-    // Verifica se a data é válida
-    if (isNaN(date.getTime())) {
-      console.error('Data inválida:', dateTimeLocal);
-      return '';
-    }
-    
-    return date.toISOString();
+    // datetime-local retorna "YYYY-MM-DDTHH:mm", backend espera "YYYY-MM-DDTHH:mm:ss"
+    return dateTimeLocal.length === 16 ? `${dateTimeLocal}:00` : dateTimeLocal;
   };
 
   // Preenche o formulário quando edita

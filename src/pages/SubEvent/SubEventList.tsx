@@ -5,6 +5,7 @@ import { SubEventRequest, SubEventResponse, EventResponse } from '@/types';
 import Button from '@/components/common/Button';
 import SubEventForm from '@/components/common/SubEventForm';
 import QRCodeManager from '@/components/common/QRCodeManager';
+import SubscriptionManager from '@/components/common/SubscriptionManager';
 import Toast from '@/components/common/Toast';
 
 const SubEventList: React.FC = () => {
@@ -26,6 +27,14 @@ const SubEventList: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [qrCodeModal, setQrCodeModal] = useState<{
+    isOpen: boolean;
+    subEvent: SubEventResponse | null;
+  }>({
+    isOpen: false,
+    subEvent: null,
+  });
+
+  const [subscriptionModal, setSubscriptionModal] = useState<{
     isOpen: boolean;
     subEvent: SubEventResponse | null;
   }>({
@@ -118,6 +127,14 @@ const SubEventList: React.FC = () => {
       isOpen: false,
       subEvent: null,
     });
+  };
+
+  const handleOpenSubscriptionModal = (subEvent: SubEventResponse) => {
+    setSubscriptionModal({ isOpen: true, subEvent });
+  };
+
+  const handleCloseSubscriptionModal = () => {
+    setSubscriptionModal({ isOpen: false, subEvent: null });
   };
 
   const handleFormSubmit = async (data: SubEventRequest) => {
@@ -272,6 +289,12 @@ const SubEventList: React.FC = () => {
 
                   <div className="flex gap-2 lg:flex-shrink-0">
                     <button
+                      onClick={() => handleOpenSubscriptionModal(subEvent)}
+                      className="px-4 py-2 text-indigo-600 hover:bg-indigo-600 hover:text-white border border-indigo-600 rounded-lg transition-colors text-sm font-medium"
+                    >
+                      Inscrições
+                    </button>
+                    <button
                       onClick={() => handleOpenQRCodeModal(subEvent)}
                       className="px-4 py-2 text-purple-600 hover:bg-purple-600 hover:text-white border border-purple-600 rounded-lg transition-colors text-sm font-medium"
                     >
@@ -385,6 +408,18 @@ const SubEventList: React.FC = () => {
           subEventId={qrCodeModal.subEvent.id}
           subEventTitle={qrCodeModal.subEvent.title}
           onClose={handleCloseQRCodeModal}
+          onSuccess={(message) => showToast(message, 'success')}
+          onError={(message) => showToast(message, 'error')}
+        />
+      )}
+
+      {/* Modal de inscrições */}
+      {subscriptionModal.subEvent && (
+        <SubscriptionManager
+          isOpen={subscriptionModal.isOpen}
+          subEventId={subscriptionModal.subEvent.id}
+          subEventTitle={subscriptionModal.subEvent.title}
+          onClose={handleCloseSubscriptionModal}
           onSuccess={(message) => showToast(message, 'success')}
           onError={(message) => showToast(message, 'error')}
         />

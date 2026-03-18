@@ -143,7 +143,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
       {/* Instruções */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
         <p className="text-sm text-blue-800">
-          💡 Clique no mapa para selecionar uma localização ou use a busca por endereço acima
+          Clique no mapa para selecionar uma localização ou use a busca por endereço acima
         </p>
       </div>
 
@@ -209,7 +209,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1">
               <p className="text-sm font-medium text-green-800 mb-1">
-                📍 Localização Selecionada
+                Localização Selecionada
               </p>
               <p className="text-sm text-green-700">
                 Latitude: {latitude.toFixed(6)} | Longitude: {longitude.toFixed(6)}

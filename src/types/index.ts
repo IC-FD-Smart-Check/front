@@ -178,3 +178,14 @@ export interface CheckInfoResponse {
 export interface CheckHistoryResponse {
   records: CheckResponse[];
 }
+
+// Subscription types
+export interface SubscriptionResponse {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  subEventId: string;
+  subEventTitle: string;
+  createdAt: string;
+}

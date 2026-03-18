@@ -90,13 +90,13 @@ const StudentCheck: React.FC<StudentCheckProps> = ({ onCheckComplete }) => {
       const errorMessage = err.response?.data?.message || err.message || 'Erro ao realizar ação';
 
       if (errorMessage.includes('Permissão de localização')) {
-        showToast('📍 ' + errorMessage, 'error');
+        showToast(errorMessage, 'error');
       } else if (errorMessage.includes('muito longe')) {
-        showToast('📏 ' + errorMessage, 'error');
+        showToast(errorMessage, 'error');
       } else if (errorMessage.includes('expirada')) {
-        showToast('⏱️ ' + errorMessage, 'error');
+        showToast(errorMessage, 'error');
       } else if (errorMessage.includes('assinatura')) {
-        showToast('🔒 Erro de segurança. Tente novamente.', 'error');
+        showToast('Erro de segurança. Tente novamente.', 'error');
       } else {
         showToast(errorMessage, 'error');
       }
