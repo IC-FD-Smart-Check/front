@@ -6,6 +6,7 @@ import type { ComponentType } from 'react';
 import Check from '@/pages/check/check';
 import Event from '@/pages/Event/Event.tsx';
 import SubEventList from '@/pages/SubEvent/SubEventList';
+import Reports from '@/components/check/admin/Reports';
 
 export interface RouteConfig {
   path: string;
@@ -70,6 +71,13 @@ export const routesConfig: RouteConfig[] = [
   {
     path: '/events/:eventId/subevents',
     component: SubEventList,
+    isPrivate: true,
+    layout: true,
+    roles: ['ADMIN'],
+  },
+  {
+    path: '/reports',
+    component: Reports,
     isPrivate: true,
     layout: true,
     roles: ['ADMIN'],
