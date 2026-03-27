@@ -116,6 +116,7 @@ export interface GeoPayload {
 
 // CHECK-IN REQUEST (NOVA ESTRUTURA)
 export interface CheckRequest {
+  requestId: string;
   qrCode: string;
   type: 'CHECKIN' | 'CHECKOUT';
   geoPayload: GeoPayload;

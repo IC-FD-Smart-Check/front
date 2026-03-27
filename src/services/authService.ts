@@ -41,18 +41,10 @@ class AuthService {
   }
 
   /**
-   * Realiza logout do usuário
+   * Realiza logout do usuário (notifica o backend; erros são silenciados)
    */
-  async logout(): Promise<void> {
-    try {
-      // Chama endpoint de logout no backend (opcional)
-      await api.post('/auth/logout');
-    } catch (error) {
-      // Continua com logout local mesmo se o backend falhar
-      console.warn('Erro no logout do backend:', error);
-    } finally {
-      this.clearAuthData();
-    }
+  logout(): Promise<void> {
+    return api.post('/auth/logout').then(() => {}).catch(() => {});
   }
 
   /**
@@ -160,10 +152,6 @@ class AuthService {
     localStorage.setItem(this.STORAGE_KEYS.USER, JSON.stringify(user));
   }
 
-  private clearAuthData(): void {
-    localStorage.removeItem(this.STORAGE_KEYS.TOKEN);
-    localStorage.removeItem(this.STORAGE_KEYS.USER);
-  }
 }
 
 // Exporta uma instância singleton

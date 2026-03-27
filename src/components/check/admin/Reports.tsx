@@ -7,7 +7,7 @@ import { userService } from '@/services/userService';
 import { reportService } from '@/services/reportService';
 import { subscriptionService } from '@/services/subscriptionService';
 import { EventResponse, SubEventResponse } from '@/types';
-import { Users, CheckCircle, XCircle, FileText, Sheet, ArrowLeft } from 'lucide-react';
+import { Users, CheckCircle, XCircle, FileText, Sheet, ArrowLeft, Loader2 } from 'lucide-react';
 
 interface Student {
   id: string;
@@ -37,6 +37,8 @@ export default function Reports() {
   const [loadingSubeventos, setLoadingSubeventos] = useState(false);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [subEventInscritos, setSubEventInscritos] = useState(0);
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const [exportingExcel, setExportingExcel] = useState(false);
 
   useEffect(() => {
     loadEvents();
@@ -48,6 +50,7 @@ export default function Reports() {
         .then(subs => setSubEventInscritos(subs.length))
         .catch(error => {
           console.error('Erro ao buscar inscritos:', error);
+          showToast('Erro ao carregar inscritos do subevento', 'error');
           setSubEventInscritos(0);
         });
     }
@@ -110,6 +113,7 @@ export default function Reports() {
           });
         } catch (error) {
           console.error(`Erro ao buscar inscritos do subevento ${subEvent.id}:`, error);
+          showToast('Erro ao carregar estatísticas de inscrições', 'error');
           statsMap.set(subEvent.id, {
             inscritos: 0,
             presentes,
@@ -219,6 +223,7 @@ export default function Reports() {
       return;
     }
 
+    setExportingPdf(true);
     try {
       const response = selectedSubeventoId
         ? await reportService.exportSubEventPdf(selectedSubeventoId)
@@ -242,6 +247,8 @@ export default function Reports() {
     } catch (error) {
       showToast('Erro ao exportar PDF', 'error');
       console.error(error);
+    } finally {
+      setExportingPdf(false);
     }
   };
 
@@ -251,6 +258,7 @@ export default function Reports() {
       return;
     }
 
+    setExportingExcel(true);
     try {
       const response = selectedSubeventoId
         ? await reportService.exportSubEventExcel(selectedSubeventoId)
@@ -276,6 +284,8 @@ export default function Reports() {
     } catch (error) {
       showToast('Erro ao exportar Excel', 'error');
       console.error(error);
+    } finally {
+      setExportingExcel(false);
     }
   };
 
@@ -343,17 +353,21 @@ export default function Reports() {
             <div className="flex gap-2">
               <button
                 onClick={handleExportPDF}
-                className="p-2 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-lg transition-colors"
+                disabled={exportingPdf}
+                className="p-2 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Exportar PDF"
+                aria-label="Exportar relatório em PDF"
               >
-                <FileText size={20} />
+                {exportingPdf ? <Loader2 size={20} className="animate-spin" /> : <FileText size={20} />}
               </button>
               <button
                 onClick={handleExportExcel}
-                className="p-2 text-green-600 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors"
+                disabled={exportingExcel}
+                className="p-2 text-green-600 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Exportar Excel"
+                aria-label="Exportar relatório em Excel"
               >
-                <Sheet size={20} />
+                {exportingExcel ? <Loader2 size={20} className="animate-spin" /> : <Sheet size={20} />}
               </button>
             </div>
           </div>
@@ -496,19 +510,21 @@ export default function Reports() {
             <div className="flex gap-2">
               <button
                 onClick={handleExportPDF}
-                disabled={loading}
+                disabled={loading || exportingPdf}
                 className="p-2 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Exportar PDF Completo"
+                aria-label="Exportar relatório completo em PDF"
               >
-                <FileText size={20} />
+                {exportingPdf ? <Loader2 size={20} className="animate-spin" /> : <FileText size={20} />}
               </button>
               <button
                 onClick={handleExportExcel}
-                disabled={loading}
+                disabled={loading || exportingExcel}
                 className="p-2 text-green-600 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Exportar Excel Completo"
+                aria-label="Exportar relatório completo em Excel"
               >
-                <Sheet size={20} />
+                {exportingExcel ? <Loader2 size={20} className="animate-spin" /> : <Sheet size={20} />}
               </button>
             </div>
           </div>

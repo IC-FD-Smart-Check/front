@@ -1,4 +1,5 @@
 import { crypto } from './crypto';
+import { geoService } from '@/services/geoService';
 
 export interface GeoPayload {
   latitude: number;
@@ -68,29 +69,11 @@ export const geoSecurity = {
   },
 
   /**
-   * Cria assinatura criptográfica do payload
-   */
-  signPayload: (payload: GeoPayload): string => {
-    // Ordenando as chaves para bater com o Backend Java
-    const sortedPayload = Object.keys(payload)
-      .sort()
-      .reduce((result: any, key) => {
-        result[key] = (payload as any)[key as keyof GeoPayload];
-        return result;
-      }, {});
-
-    const data = JSON.stringify(sortedPayload);
-
-    return crypto.generateHMAC(data);
-  },
-
-  /**
    * Cria objeto completo e assinado para enviar ao backend
    */
   createSecureRequest: async (): Promise<SecureGeoRequest> => {
     const payload = await geoSecurity.getCurrentPosition();
-    const signature = geoSecurity.signPayload(payload);
-    
+    const { signature } = await geoService.signPayload(payload);
     return { geoPayload: payload, signature };
   },
 

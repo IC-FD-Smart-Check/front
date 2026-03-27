@@ -289,7 +289,7 @@ const Event: React.FC = () => {
               <div className="px-5 py-4 bg-gray-50/30 border-t border-gray-100 flex items-center justify-between gap-3">
                 <button
                   onClick={() => navigate(`/events/${event.id}/subevents`)}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 hover:bg-purple-200 hover:text-purple-800 rounded-lg transition-all text-sm font-semibold shadow-sm hover:shadow-md"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-[#B7294A]/10 text-[#B7294A] hover:bg-[#B7294A] hover:text-white rounded-lg transition-all text-sm font-semibold shadow-sm hover:shadow-md"
                 >
                   <Layers size={16} />
                   Subeventos

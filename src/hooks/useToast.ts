@@ -14,8 +14,10 @@ export const useToast = () => {
   });
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const showToast = useCallback((message: string, type: 'success' | 'error' | 'warning', duration = 3000) => {
-    // Limpa timeout anterior se existir
+  const showToast = useCallback((message: string, type: 'success' | 'error' | 'warning', duration?: number) => {
+    const defaultDuration = type === 'error' ? 8000 : type === 'warning' ? 6000 : 3000;
+    const finalDuration = duration ?? defaultDuration;
+
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
@@ -25,7 +27,7 @@ export const useToast = () => {
     timeoutRef.current = setTimeout(() => {
       setToast((prev) => ({ ...prev, isVisible: false }));
       timeoutRef.current = null;
-    }, duration);
+    }, finalDuration);
   }, []);
 
   const hideToast = useCallback(() => {

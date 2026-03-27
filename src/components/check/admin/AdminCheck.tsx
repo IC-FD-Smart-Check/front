@@ -5,8 +5,12 @@ import CheckFilters from './CheckFilters';
 import CheckTable from './CheckTable';
 import CheckCards from './CheckCards';
 import type { CheckResponse } from '@/types';
+import { useToast } from '@/hooks/useToast';
+import LoadingOverlay from '@/components/common/LoadingOverlay';
+import Toast from '@/components/common/Toast';
 
 const AdminCheck: React.FC = () => {
+  const { toast, showToast, hideToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterEvent, setFilterEvent] = useState<string>('ALL');
   const [checkRecords, setCheckRecords] = useState<CheckResponse[]>([]);
@@ -37,7 +41,7 @@ const AdminCheck: React.FC = () => {
         checkoutCount: checkOuts,
       });
     } catch (err) {
-      console.error('Erro ao carregar histórico:', err);
+      showToast('Erro ao carregar histórico de check-ins', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -54,7 +58,14 @@ const AdminCheck: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="relative space-y-6">
+      <LoadingOverlay isVisible={isLoading} />
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
       {/* Stats Cards */}
       <CheckStats
         totalEvents={stats.totalCheckins}

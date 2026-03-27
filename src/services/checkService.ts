@@ -28,6 +28,7 @@ export const checkService = {
 
       // 2. Criar requisição
       const request: CheckRequest = {
+        requestId: crypto.randomUUID(),
         qrCode,
         type,
         geoPayload,

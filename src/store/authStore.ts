@@ -6,7 +6,7 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   setAuth: (user: User, token: string) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 // Função auxiliar para carregar usuário do localStorage
@@ -32,7 +32,12 @@ export const useAuthStore = create<AuthState>()((set) => ({
     set({ user, token, isAuthenticated: true });
   },
   
-  logout: () => {
+  logout: async () => {
+    try {
+      await import('../services/authService').then(m => m.authService.logout());
+    } catch {
+      // Ignore network errors — always clear local state
+    }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     set({ user: null, token: null, isAuthenticated: false });

@@ -41,10 +41,12 @@ const CheckFilters: React.FC<CheckFiltersProps> = ({
 
       {/* Filtro por Evento */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="filter-event" className="block text-sm font-medium text-gray-700 mb-2">
           Filtrar por Evento
         </label>
         <select
+          id="filter-event"
+          aria-label="Filtrar por evento"
           value={filterEvent}
           onChange={(e) => onFilterChange(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B7294A]"
