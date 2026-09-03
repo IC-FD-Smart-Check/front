@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { UserRequest, UserResponse } from '@/types';
+import type { ClassGroupResponse, CourseResponse, UserRequest, UserResponse } from '@/types';
+import { classGroupService, courseService } from '@/services';
+import { semesterLabel } from '@/utils/semester';
 import Input from '@/components/common/Input';
 
 interface UserFormProps {
@@ -23,12 +25,62 @@ const UserForm: React.FC<UserFormProps> = ({
     ra: '',
     password: '',
     role: 'STUDENT',
+    classGroupId: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
 
+  // Curso serve apenas para filtrar as turmas — não é enviado ao backend
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [courses, setCourses] = useState<CourseResponse[]>([]);
+  const [classGroups, setClassGroups] = useState<ClassGroupResponse[]>([]);
+  const [isLoadingAcademic, setIsLoadingAcademic] = useState(false);
+  const [academicError, setAcademicError] = useState<string | null>(null);
+
   const isEditMode = !!user;
+  const isStudent = formData.role === 'STUDENT';
+
+  // Turmas do curso selecionado
+  const availableClassGroups = selectedCourseId
+    ? classGroups.filter((classGroup) => classGroup.courseId === selectedCourseId)
+    : [];
+
+  // Carrega cursos e turmas ao abrir o modal
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let active = true;
+
+    const loadAcademicData = async () => {
+      try {
+        setIsLoadingAcademic(true);
+        setAcademicError(null);
+
+        const [coursesData, classGroupsData] = await Promise.all([
+          courseService.getAllCourses(),
+          classGroupService.getAllClassGroups(),
+        ]);
+
+        if (!active) return;
+        setCourses(coursesData);
+        setClassGroups(classGroupsData);
+      } catch (err: any) {
+        if (!active) return;
+        setAcademicError(
+          err.response?.data?.message || 'Não foi possível carregar os cursos e turmas.'
+        );
+      } finally {
+        if (active) setIsLoadingAcademic(false);
+      }
+    };
+
+    loadAcademicData();
+
+    return () => {
+      active = false;
+    };
+  }, [isOpen]);
 
   // Preenche formulário quando editar
   useEffect(() => {
@@ -39,7 +91,9 @@ const UserForm: React.FC<UserFormProps> = ({
         ra: user.ra ?? '',
         password: '', // Senha em branco ao editar
         role: user.role,
+        classGroupId: user.classGroupId || '',
       });
+      setSelectedCourseId(user.courseId || '');
     } else {
       setFormData({
         name: '',
@@ -47,7 +101,9 @@ const UserForm: React.FC<UserFormProps> = ({
         ra: '',
         password: '',
         role: 'STUDENT',
+        classGroupId: '',
       });
+      setSelectedCourseId('');
     }
     setErrors({});
   }, [user, isOpen]);
@@ -56,11 +112,28 @@ const UserForm: React.FC<UserFormProps> = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Admin não tem turma; trocar o perfil limpa a seleção
+    if (name === 'role') {
+      setFormData((prev) => ({ ...prev, role: value as UserRequest['role'], classGroupId: '' }));
+      if (value === 'ADMIN') {
+        setSelectedCourseId('');
+      }
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+
     // Limpa erro do campo ao digitar
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
+  };
+
+  // Trocar o curso invalida a turma escolhida anteriormente
+  const handleCourseChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCourseId(e.target.value);
+    setFormData((prev) => ({ ...prev, classGroupId: '' }));
+    setErrors((prev) => ({ ...prev, courseId: '', classGroupId: '' }));
   };
 
   const validate = (): boolean => {
@@ -98,6 +171,16 @@ const UserForm: React.FC<UserFormProps> = ({
       }
     }
 
+    // Turma (obrigatória apenas para alunos)
+    if (isStudent) {
+      if (!selectedCourseId) {
+        newErrors.courseId = 'Curso é obrigatório para alunos';
+      }
+      if (!formData.classGroupId) {
+        newErrors.classGroupId = 'Turma é obrigatória para alunos';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -111,9 +194,14 @@ const UserForm: React.FC<UserFormProps> = ({
       // Remove senha do payload se estiver vazia no modo edição
       const dataToSend = { ...formData };
       if (isEditMode && !dataToSend.password) {
-        delete (dataToSend as any).password;
+        delete dataToSend.password;
       }
-      
+
+      // O backend recusa classGroupId para ADMIN
+      if (dataToSend.role !== 'STUDENT') {
+        delete dataToSend.classGroupId;
+      }
+
       await onSubmit(dataToSend as UserRequest);
       handleClose();
     } catch (error) {
@@ -123,7 +211,8 @@ const UserForm: React.FC<UserFormProps> = ({
 
   const handleClose = () => {
     if (!isSubmitting) {
-      setFormData({ name: '', email: '', ra: '', password: '', role: 'STUDENT' });
+      setFormData({ name: '', email: '', ra: '', password: '', role: 'STUDENT', classGroupId: '' });
+      setSelectedCourseId('');
       setErrors({});
       onClose();
     }
@@ -249,6 +338,82 @@ const UserForm: React.FC<UserFormProps> = ({
                 <p className="text-red-500 text-sm mt-1">{errors.role}</p>
               )}
             </div>
+
+            {/* Curso e turma — apenas para alunos */}
+            {isStudent && (
+              <>
+                {academicError && (
+                  <p className="text-red-500 text-sm">{academicError}</p>
+                )}
+
+                {/* Curso (filtra as turmas) */}
+                <div>
+                  <label htmlFor="courseId" className="block text-sm font-medium text-gray-700 mb-1">
+                    Curso <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="courseId"
+                    name="courseId"
+                    value={selectedCourseId}
+                    onChange={handleCourseChange}
+                    disabled={isSubmitting || isLoadingAcademic || courses.length === 0}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B7294A] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed bg-white"
+                  >
+                    <option value="">
+                      {isLoadingAcademic
+                        ? 'Carregando cursos...'
+                        : courses.length === 0
+                        ? 'Nenhum curso cadastrado'
+                        : 'Selecione o curso'}
+                    </option>
+                    {courses.map((course) => (
+                      <option key={course.id} value={course.id}>
+                        {course.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.courseId && (
+                    <p className="text-red-500 text-sm mt-1">{errors.courseId}</p>
+                  )}
+                </div>
+
+                {/* Turma (filtrada pelo curso) */}
+                <div>
+                  <label htmlFor="classGroupId" className="block text-sm font-medium text-gray-700 mb-1">
+                    Turma <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="classGroupId"
+                    name="classGroupId"
+                    value={formData.classGroupId || ''}
+                    onChange={handleChange}
+                    disabled={isSubmitting || isLoadingAcademic || !selectedCourseId}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B7294A] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed bg-white"
+                  >
+                    <option value="">
+                      {!selectedCourseId
+                        ? 'Selecione um curso primeiro'
+                        : availableClassGroups.length === 0
+                        ? 'Nenhuma turma neste curso'
+                        : 'Selecione a turma'}
+                    </option>
+                    {availableClassGroups.map((classGroup) => (
+                      <option key={classGroup.id} value={classGroup.id}>
+                        {classGroup.name} — {semesterLabel(classGroup.semester)}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.classGroupId && (
+                    <p className="text-red-500 text-sm mt-1">{errors.classGroupId}</p>
+                  )}
+                  {selectedCourseId && availableClassGroups.length === 0 && !isLoadingAcademic && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Cadastre uma turma para este curso em "Cursos e Turmas".
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Botões */}

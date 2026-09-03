@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { Calendar, QrCode, Users, TrendingUp, Clock, MapPin } from 'lucide-react';
-import { eventService } from '@/services';
-import { EventResponse } from '@/types';
+import { dashboardService, eventService } from '@/services';
+import type { DashboardStatsResponse, EventResponse } from '@/types';
 
 const Home: React.FC = () => {
   const { user } = useAuthStore();
@@ -11,6 +11,10 @@ const Home: React.FC = () => {
   
   const [upcomingEvents, setUpcomingEvents] = useState<EventResponse[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const isAdmin = user?.role === 'ADMIN';
+  const [stats, setStats] = useState<DashboardStatsResponse | null>(null);
+  const [loadingStats, setLoadingStats] = useState(isAdmin);
 
   useEffect(() => {
     const loadData = async () => {
@@ -26,6 +30,24 @@ const Home: React.FC = () => {
     loadData();
   }, []);
 
+  // Métricas dos cards — só o admin tem acesso ao endpoint
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const loadStats = async () => {
+      try {
+        setLoadingStats(true);
+        const data = await dashboardService.getStats();
+        setStats(data);
+      } catch (error) {
+        console.error("Erro ao carregar métricas do dashboard", error);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+    loadStats();
+  }, [isAdmin]);
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -36,10 +58,30 @@ const Home: React.FC = () => {
   };
 
   const statsCards = [
-    { title: 'Eventos Ativos', value: '12', icon: Calendar, color: '#B7294A' },
-    { title: 'Check-ins Hoje', value: '45', icon: QrCode, color: '#4CAF50' },
-    { title: 'Total de Participantes', value: '328', icon: Users, color: '#2196F3' },
-    { title: 'Taxa de Presença', value: '87%', icon: TrendingUp, color: '#FF9800' },
+    {
+      title: 'Eventos Ativos',
+      value: stats ? String(stats.activeEvents) : '—',
+      icon: Calendar,
+      color: '#B7294A',
+    },
+    {
+      title: 'Check-ins Hoje',
+      value: stats ? String(stats.checkinsToday) : '—',
+      icon: QrCode,
+      color: '#4CAF50',
+    },
+    {
+      title: 'Total de Participantes',
+      value: stats ? String(stats.totalParticipants) : '—',
+      icon: Users,
+      color: '#2196F3',
+    },
+    {
+      title: 'Taxa de Presença',
+      value: stats ? `${Math.round(stats.attendanceRate)}%` : '—',
+      icon: TrendingUp,
+      color: '#FF9800',
+    },
   ];
 
   return (
@@ -57,7 +99,7 @@ const Home: React.FC = () => {
         </div>
       </div>
 
-      {user?.role === 'ADMIN' && (
+      {isAdmin && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {statsCards.map((stat, index) => {
             const Icon = stat.icon;
@@ -68,7 +110,13 @@ const Home: React.FC = () => {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
-                  <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
+                  {loadingStats ? (
+                    <div className="h-8 flex items-center">
+                      <div className="h-6 w-12 bg-gray-200 rounded animate-pulse" />
+                    </div>
+                  ) : (
+                    <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
+                  )}
                 </div>
               </div>
             );
@@ -99,7 +147,9 @@ const Home: React.FC = () => {
               <div 
                 key={event.id} 
                 className="border border-gray-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer bg-white group"
-                onClick={() => navigate(user?.role === 'ADMIN' ? `/events/${event.id}/subevents` : `/checkin`)} // Redireciona dependendo da role
+                onClick={() =>
+                  navigate(user?.role === 'ADMIN' ? `/events/${event.id}/subevents` : `/events/${event.id}`)
+                }
               >
                 <div className="h-32 bg-gray-100 relative overflow-hidden">
                   {event.imageBase64 ? (

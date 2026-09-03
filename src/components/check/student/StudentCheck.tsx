@@ -37,12 +37,12 @@ const StudentCheck: React.FC<StudentCheckProps> = ({ onCheckComplete }) => {
 
   const loadCheckHistory = async () => {
     try {
-      const data = await checkService.getHistory();
-      setCheckRecords(data.records || []);
+      const records = await checkService.getHistory();
+      setCheckRecords(records);
 
-      const uniqueEvents = new Set(data.records.map((r) => r.eventId)).size;
-      const checkIns = data.records.filter((r) => r.checkinTime).length;
-      const checkOuts = data.records.filter((r) => r.checkoutTime).length;
+      const uniqueEvents = new Set(records.map((r) => r.eventId)).size;
+      const checkIns = records.filter((r) => r.checkinTime).length;
+      const checkOuts = records.filter((r) => r.checkoutTime).length;
 
       setHistoryStats({
         totalEvents: uniqueEvents,

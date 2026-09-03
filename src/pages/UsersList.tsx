@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { userService } from '@/services';
-import { UserRequest, UserResponse } from '@/types';
+import type { UserRequest, UserResponse } from '@/types';
+import { semesterLabel } from '@/utils/semester';
 import Button from '@/components/common/Button';
 import DeleteUserModal from '@/components/common/DeleteUserModal';
 import UserForm from '@/components/common/UserForm';
 import Toast from '@/components/common/Toast';
 
 const UsersList: React.FC = () => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<UserResponse[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<UserResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -261,13 +264,23 @@ const UsersList: React.FC = () => {
             </select>
           </div>
 
-          {/* Botão Novo Usuário */}
-          <Button
-            onClick={handleOpenCreateModal}
-            className="whitespace-nowrap"
-          >
-            + Novo Usuário
-          </Button>
+          {/* Ações */}
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => navigate('/import')}
+              className="px-4 py-2 rounded-lg border border-[#B7294A] text-[#B7294A] hover:bg-[#B7294A] hover:text-white transition-colors whitespace-nowrap"
+            >
+              Importar alunos
+            </button>
+
+            <Button
+              onClick={handleOpenCreateModal}
+              className="whitespace-nowrap"
+            >
+              + Novo Usuário
+            </Button>
+          </div>
         </div>
 
         {/* Contador */}
@@ -328,6 +341,9 @@ const UsersList: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Perfil
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Turma
+                  </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Ações
                   </th>
@@ -349,6 +365,21 @@ const UsersList: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getRoleBadge(user.role)}
+                    </td>
+                    <td className="px-6 py-4">
+                      {user.classGroupName ? (
+                        <div>
+                          <div className="text-sm text-gray-900">
+                            {user.classGroupName}
+                            {user.semester && (
+                              <span className="text-gray-500"> · {semesterLabel(user.semester)}</span>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-500">{user.courseName}</div>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">—</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex gap-2 justify-end">

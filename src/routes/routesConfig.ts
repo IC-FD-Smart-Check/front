@@ -5,8 +5,12 @@ import UsersList from '@/pages/UsersList';
 import type { ComponentType } from 'react';
 import Check from '@/pages/check/check';
 import Event from '@/pages/Event/Event.tsx';
+import EventDetails from '@/pages/Event/EventDetails';
 import SubEventList from '@/pages/SubEvent/SubEventList';
 import Reports from '@/components/check/admin/Reports';
+import Academic from '@/pages/Academic/Academic';
+import StudentImport from '@/pages/Import/StudentImport';
+import Profile from '@/pages/Profile/Profile';
 
 export interface RouteConfig {
   path: string;
@@ -69,6 +73,13 @@ export const routesConfig: RouteConfig[] = [
     roles: ['ADMIN'],
   },
   {
+    path: '/events/:eventId',
+    component: EventDetails,
+    isPrivate: true,
+    layout: true,
+    roles: ['STUDENT', 'ADMIN'],
+  },
+  {
     path: '/events/:eventId/subevents',
     component: SubEventList,
     isPrivate: true,
@@ -78,6 +89,27 @@ export const routesConfig: RouteConfig[] = [
   {
     path: '/reports',
     component: Reports,
+    isPrivate: true,
+    layout: true,
+    roles: ['ADMIN'],
+  },
+  {
+    path: '/academic',
+    component: Academic,
+    isPrivate: true,
+    layout: true,
+    roles: ['ADMIN'],
+  },
+  {
+    path: '/perfil',
+    component: Profile,
+    isPrivate: true,
+    layout: true,
+    roles: ['STUDENT', 'ADMIN'],
+  },
+  {
+    path: '/import',
+    component: StudentImport,
     isPrivate: true,
     layout: true,
     roles: ['ADMIN'],

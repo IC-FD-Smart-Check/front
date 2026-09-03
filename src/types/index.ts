@@ -4,6 +4,12 @@ export interface User {
   ra?: string;
   name: string;
   role: 'STUDENT' | 'ADMIN';
+  // Turma do aluno (ausente para ADMIN)
+  classGroupId?: string | null;
+  classGroupName?: string | null;
+  semester?: Semester | null;
+  courseId?: string | null;
+  courseName?: string | null;
 }
 
 export interface LoginRequest {
@@ -24,8 +30,11 @@ export interface UserRequest {
   name: string;
   email?: string;
   ra?: string;
-  password: string;
+  // Omitida na edição para manter a senha atual
+  password?: string;
   role: 'STUDENT' | 'ADMIN';
+  // Obrigatório quando role = STUDENT; não deve ser enviado para ADMIN
+  classGroupId?: string;
 }
 
 export interface UserResponse {
@@ -34,8 +43,113 @@ export interface UserResponse {
   email?: string;
   ra?: string;
   role: 'STUDENT' | 'ADMIN';
+  classGroupId?: string | null;
+  classGroupName?: string | null;
+  semester?: Semester | null;
+  courseId?: string | null;
+  courseName?: string | null;
   createdAt?: string;
   updatedAt?: string;
+}
+
+// Course types
+export type Semester =
+  | 'S1' | 'S2' | 'S3' | 'S4' | 'S5' | 'S6' | 'S7'
+  | 'S8' | 'S9' | 'S10' | 'S11' | 'S12' | 'S13' | 'S14';
+
+export interface CourseRequest {
+  name: string;
+  durationInSemesters: number;
+}
+
+export interface CourseResponse {
+  id: string;
+  name: string;
+  durationInSemesters: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// ClassGroup (turma) types
+export interface ClassGroupRequest {
+  name: string;
+  /** Identificador da turma no sistema externo, usado na importação de alunos */
+  externalCode?: string;
+  semester: Semester;
+  courseId: string;
+}
+
+export interface ClassGroupResponse {
+  id: string;
+  name: string;
+  externalCode?: string | null;
+  semester: Semester;
+  semesterNumber: number;
+  courseId: string;
+  courseName: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Importação de alunos
+export type ImportAction = 'CREATE' | 'UPDATE' | 'SKIP';
+
+export interface ImportTemplateResponse {
+  id: string;
+  name: string;
+  description: string;
+  acceptedExtensions: string[];
+}
+
+export interface ImportStudent {
+  ra: string;
+  name: string;
+  action: ImportAction;
+  /** Senha inicial gerada — preenchida apenas para alunos novos */
+  generatedPassword?: string | null;
+  /** Motivo, quando o aluno não pôde ser importado */
+  reason?: string | null;
+}
+
+export interface ImportClassGroup {
+  externalCode: string | null;
+  fileCourseName?: string | null;
+  filePeriod?: string | null;
+  /** Semestre extraído do período do arquivo ("2º Semestre" -> 2) */
+  fileSemesterNumber?: number | null;
+  /** true quando existe turma cadastrada com este identificador */
+  matched: boolean;
+  classGroupId?: string | null;
+  classGroupName?: string | null;
+  classGroupSemester?: Semester | null;
+  courseName?: string | null;
+  warnings: string[];
+  students: ImportStudent[];
+}
+
+export interface StudentImportResponse {
+  templateId: string;
+  templateName: string;
+  /** false = preview (nada gravado), true = importação efetivada */
+  executed: boolean;
+  totalClassGroups: number;
+  totalStudents: number;
+  toCreate: number;
+  toUpdate: number;
+  toSkip: number;
+  classGroups: ImportClassGroup[];
+}
+
+// Dashboard types
+export interface DashboardStatsResponse {
+  /** Eventos não cancelados que ainda não terminaram */
+  activeEvents: number;
+  /** Check-ins realizados hoje */
+  checkinsToday: number;
+  /** Usuários distintos com pelo menos um check-in */
+  totalParticipants: number;
+  /** Percentual de inscrições que viraram presença completa */
+  attendanceRate: number;
 }
 
 // Event types
@@ -176,11 +290,6 @@ export interface CheckInfoResponse {
   // Validações
   canPerformAction: boolean;
   validationMessage: string | null;
-}
-
-// HISTÓRICO
-export interface CheckHistoryResponse {
-  records: CheckResponse[];
 }
 
 // Subscription types

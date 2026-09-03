@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Calendar, QrCode, Users, LogOut, BarChart, Menu, X } from 'lucide-react';
+import { Home, Calendar, QrCode, Users, LogOut, BarChart, Menu, X, GraduationCap, Upload } from 'lucide-react';
 import { useAuth } from '@/hooks';
 import Logo from '../common/Logo';
 
@@ -35,7 +35,9 @@ const Sidebar: React.FC = () => {
     { path: '/events', label: 'Eventos', icon: Calendar, roles: ['ADMIN'] },
     { path: '/check', label: 'Check-in', icon: QrCode, roles: ['STUDENT', 'ADMIN'] },
     { path: '/reports', label: 'Relatórios', icon: BarChart, roles: ['ADMIN'] },
+    { path: '/academic', label: 'Cursos e Turmas', icon: GraduationCap, roles: ['ADMIN'] },
     { path: '/users', label: 'Usuários', icon: Users, roles: ['ADMIN'] },
+    { path: '/import', label: 'Importar Alunos', icon: Upload, roles: ['ADMIN'] },
   ];
 
   const filteredMenuItems = menuItems.filter((item) =>
@@ -62,7 +64,7 @@ const Sidebar: React.FC = () => {
 
       <aside className={`
         w-64 bg-white  flex flex-col
-        fixed lg:static h-screen left-0 top-0 z-40
+        fixed h-screen left-0 top-0 z-40
         transition-transform duration-300
         lg:translate-x-0
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -106,7 +108,10 @@ const Sidebar: React.FC = () => {
         </nav>
 
         <div className="p-3 border-t bg-gray-50">
-          <div className="flex items-center gap-2 p-2.5 mb-2 bg-white rounded-lg border">
+          <Link
+            to="/perfil"
+            className="flex items-center gap-2 p-2.5 mb-2 bg-white rounded-lg border hover:border-[#B7294A] hover:bg-[#B7294A]/5 transition-colors"
+          >
             <div className="w-8 h-8 rounded-full bg-[#B7294A]/10 flex items-center justify-center">
               <span className="text-[#B7294A] font-bold text-xs">
                 {user?.name?.charAt(0).toUpperCase()}
@@ -116,7 +121,7 @@ const Sidebar: React.FC = () => {
               <p className="font-semibold text-gray-900 text-xs truncate">{user?.name}</p>
               <p className="text-xs text-gray-600">{user?.role === 'ADMIN' ? 'Admin' : 'Estudante'}</p>
             </div>
-          </div>
+          </Link>
 
           <button
             onClick={handleLogout}

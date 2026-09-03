@@ -1,10 +1,9 @@
 import api from './api';
 import { geoSecurity, GeolocationError } from '@/utils/geoSecurity';
-import {
+import type {
   CheckInfoResponse,
   CheckRequest,
   CheckResponse,
-  CheckHistoryResponse,
 } from '@/types';
 
 export const checkService = {
@@ -49,16 +48,16 @@ export const checkService = {
   /**
    * Busca histórico de checks do usuário autenticado
    */
-  getHistory: async (): Promise<CheckHistoryResponse> => {
-    const response = await api.get<CheckHistoryResponse>('/checkin/history');
+  getHistory: async (): Promise<CheckResponse[]> => {
+    const response = await api.get<CheckResponse[]>('/checkin/history');
     return response.data;
   },
 
   /**
    * Busca checks de um evento específico (ADMIN)
    */
-  getEventChecks: async (eventId: string): Promise<CheckHistoryResponse> => {
-    const response = await api.get<CheckHistoryResponse>(`/checkin/event/${eventId}`);
+  getEventChecks: async (eventId: string): Promise<CheckResponse[]> => {
+    const response = await api.get<CheckResponse[]>(`/checkin/event/${eventId}`);
     return response.data;
   },
 

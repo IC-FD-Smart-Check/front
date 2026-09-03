@@ -92,8 +92,7 @@ export default function Reports() {
       setSubeventos(data);
 
       const statsMap = new Map<string, SubEventStats>();
-      const allChecks = await checkService.getEventChecks(selectedEventId);
-      const records = Array.isArray(allChecks) ? allChecks : (allChecks?.records ?? []);
+      const records = await checkService.getEventChecks(selectedEventId);
 
       for (const subEvent of data) {
         const subEventChecks = records.filter(check => check.subEventId === subEvent.id);
@@ -148,15 +147,13 @@ export default function Reports() {
       setLoadingStudents(true);
       setStudents([]);
 
-      const data = await checkService.getEventChecks(selectedEventId);
+      const records = await checkService.getEventChecks(selectedEventId);
 
       const allUsers = await userService.getAllUsers();
       const userEmailMap = new Map<string, string>();
       allUsers.forEach(user => {
         userEmailMap.set(user.id, user.email || user.ra || '');
       });
-
-      const records = Array.isArray(data) ? data : data?.records ?? [];
 
       const filteredRecords = records.filter(
         check => check.subEventId === selectedSubeventoId

@@ -7,3 +7,8 @@ export { subEventService } from './subEventService';
 export { default as qrCodeService } from './qrCodeService';
 export { subscriptionService } from './subscriptionService';
 export { reportService } from './reportService';
+export { courseService } from './courseService';
+export { classGroupService } from './classGroupService';
+export { dashboardService } from './dashboardService';
+export { importService } from './importService';
+export { profileService } from './profileService';

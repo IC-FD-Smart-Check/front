@@ -28,8 +28,7 @@ const AdminCheck: React.FC = () => {
   const loadCheckHistory = async () => {
     setIsLoading(true);
     try {
-      const data = await checkService.getHistory();
-      const records = data.records || [];
+      const records = await checkService.getHistory();
       setCheckRecords(records);
 
       const checkIns = records.filter((r) => r.checkinTime).length;
