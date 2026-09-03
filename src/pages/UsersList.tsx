@@ -88,7 +88,8 @@ const UsersList: React.FC = () => {
       result = result.filter(
         user =>
           user.name.toLowerCase().includes(search) ||
-          user.email.toLowerCase().includes(search)
+          user.email?.toLowerCase().includes(search) ||
+          user.ra?.toLowerCase().includes(search)
       );
     }
 
@@ -322,6 +323,9 @@ const UsersList: React.FC = () => {
                     Email
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    RA
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Perfil
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -338,7 +342,10 @@ const UsersList: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-600">{user.email}</div>
+                      <div className="text-sm text-gray-600">{user.email || '—'}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-600">{user.ra || '—'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getRoleBadge(user.role)}

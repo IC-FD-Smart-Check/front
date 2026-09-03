@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { User as UserIcon, Lock, Eye, EyeOff } from 'lucide-react';
 import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
 import Logo from '@/components/common/Logo';
@@ -13,11 +13,11 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   
   const [formData, setFormData] = useState<LoginRequest>({
-    email: '',
+    identifier: '',
     password: '',
   });
-  
-  const [errors, setErrors] = useState({ email: '', password: '' });
+
+  const [errors, setErrors] = useState({ identifier: '', password: '' });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -27,14 +27,11 @@ const Login: React.FC = () => {
   };
 
   const validate = (): boolean => {
-    const newErrors = { email: '', password: '' };
+    const newErrors = { identifier: '', password: '' };
     let isValid = true;
 
-    if (!formData.email) {
-      newErrors.email = 'Email é obrigatório';
-      isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email inválido';
+    if (!formData.identifier) {
+      newErrors.identifier = 'Email ou RA é obrigatório';
       isValid = false;
     }
 
@@ -82,14 +79,14 @@ const Login: React.FC = () => {
           )}
 
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" size={20} />
+            <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" size={20} />
             <Input
-              type="email"
-              name="email"
-              placeholder="seu.email@instituicao.edu.br"
-              value={formData.email}
+              type="text"
+              name="identifier"
+              placeholder="Email ou RA"
+              value={formData.identifier}
               onChange={handleChange}
-              error={errors.email}
+              error={errors.identifier}
               disabled={loading}
               className="pl-11"
             />

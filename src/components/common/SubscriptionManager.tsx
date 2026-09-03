@@ -152,7 +152,7 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
                     >
                       <div>
                         <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                        <p className="text-xs text-gray-500">{user.email}</p>
+                        <p className="text-xs text-gray-500">{user.email || user.ra || '—'}</p>
                       </div>
                       {subscribed ? (
                         <span className="text-xs text-green-600 font-semibold bg-green-50 px-3 py-1 rounded-full border border-green-200">
@@ -202,7 +202,7 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
                   >
                     <div>
                       <p className="text-sm font-medium text-gray-900">{sub.userName}</p>
-                      <p className="text-xs text-gray-500">{sub.userEmail}</p>
+                      <p className="text-xs text-gray-500">{sub.userEmail || '—'}</p>
                     </div>
                     <button
                       onClick={() => handleUnsubscribe(sub.userId)}

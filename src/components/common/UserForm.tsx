@@ -20,6 +20,7 @@ const UserForm: React.FC<UserFormProps> = ({
   const [formData, setFormData] = useState<UserRequest>({
     name: '',
     email: '',
+    ra: '',
     password: '',
     role: 'STUDENT',
   });
@@ -34,7 +35,8 @@ const UserForm: React.FC<UserFormProps> = ({
     if (user) {
       setFormData({
         name: user.name,
-        email: user.email,
+        email: user.email ?? '',
+        ra: user.ra ?? '',
         password: '', // Senha em branco ao editar
         role: user.role,
       });
@@ -42,6 +44,7 @@ const UserForm: React.FC<UserFormProps> = ({
       setFormData({
         name: '',
         email: '',
+        ra: '',
         password: '',
         role: 'STUDENT',
       });
@@ -70,11 +73,15 @@ const UserForm: React.FC<UserFormProps> = ({
       newErrors.name = 'Nome deve ter no mínimo 3 caracteres';
     }
 
-    // Email
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email é obrigatório';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    // Email (opcional, mas se preenchido precisa ser válido)
+    if (formData.email?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Email inválido';
+    }
+
+    // Ao menos um entre email e RA é obrigatório
+    if (!formData.email?.trim() && !formData.ra?.trim()) {
+      newErrors.email = 'Informe email ou RA';
+      newErrors.ra = 'Informe email ou RA';
     }
 
     // Senha (obrigatória apenas ao criar)
@@ -116,7 +123,7 @@ const UserForm: React.FC<UserFormProps> = ({
 
   const handleClose = () => {
     if (!isSubmitting) {
-      setFormData({ name: '', email: '', password: '', role: 'STUDENT' });
+      setFormData({ name: '', email: '', ra: '', password: '', role: 'STUDENT' });
       setErrors({});
       onClose();
     }
@@ -162,7 +169,7 @@ const UserForm: React.FC<UserFormProps> = ({
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email <span className="text-red-500">*</span>
+                Email
               </label>
               <Input
                 id="email"
@@ -174,6 +181,24 @@ const UserForm: React.FC<UserFormProps> = ({
                 error={errors.email}
                 disabled={isSubmitting}
               />
+            </div>
+
+            {/* RA */}
+            <div>
+              <label htmlFor="ra" className="block text-sm font-medium text-gray-700 mb-1">
+                RA
+              </label>
+              <Input
+                id="ra"
+                name="ra"
+                type="text"
+                placeholder="Número de matrícula (RA)"
+                value={formData.ra}
+                onChange={handleChange}
+                error={errors.ra}
+                disabled={isSubmitting}
+              />
+              <p className="text-xs text-gray-500 mt-1">Informe ao menos email ou RA.</p>
             </div>
 
             {/* Senha */}

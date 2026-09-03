@@ -1,12 +1,13 @@
 export interface User {
   id: string;
-  email: string;
+  email?: string;
+  ra?: string;
   name: string;
   role: 'STUDENT' | 'ADMIN';
 }
 
 export interface LoginRequest {
-  email: string;
+  identifier: string;
   password: string;
 }
 
@@ -21,7 +22,8 @@ export interface ForgotPasswordRequest {
 
 export interface UserRequest {
   name: string;
-  email: string;
+  email?: string;
+  ra?: string;
   password: string;
   role: 'STUDENT' | 'ADMIN';
 }
@@ -29,7 +31,8 @@ export interface UserRequest {
 export interface UserResponse {
   id: string;
   name: string;
-  email: string;
+  email?: string;
+  ra?: string;
   role: 'STUDENT' | 'ADMIN';
   createdAt?: string;
   updatedAt?: string;
@@ -185,7 +188,7 @@ export interface SubscriptionResponse {
   id: string;
   userId: string;
   userName: string;
-  userEmail: string;
+  userEmail?: string;
   subEventId: string;
   subEventTitle: string;
   createdAt: string;

@@ -153,7 +153,7 @@ export default function Reports() {
       const allUsers = await userService.getAllUsers();
       const userEmailMap = new Map<string, string>();
       allUsers.forEach(user => {
-        userEmailMap.set(user.id, user.email);
+        userEmailMap.set(user.id, user.email || user.ra || '');
       });
 
       const records = Array.isArray(data) ? data : data?.records ?? [];
@@ -378,7 +378,7 @@ export default function Reports() {
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">#</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Nome</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Email/RA</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Check-in</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Check-out</th>
                 </tr>

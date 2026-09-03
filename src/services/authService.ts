@@ -22,7 +22,7 @@ class AuthService {
       return response.data;
     } catch (error: any) {
       throw new Error(
-        error.response?.data?.message || 'Erro ao fazer login. Verifique seu email e senha.'
+        error.response?.data?.message || 'Erro ao fazer login. Verifique seu email/RA e senha.'
       );
     }
   }
