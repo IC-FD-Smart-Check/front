@@ -1,0 +1,12 @@
+services:
+  web:
+    build:
+      context: .
+      args:
+        # Trocar aqui exige rebuild (--build): o valor vai embutido no bundle.
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080/api}
+    container_name: fdsmartcheck-web
+    restart: unless-stopped
+    ports:
+      # 3000 e a origem ja liberada por padrao no CORS do backend
+      - "${WEB_PORT:-3000}:80"
