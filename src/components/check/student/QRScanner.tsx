@@ -66,12 +66,12 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onClose, isProcessing, on
           // Mais tentativas de leitura por segundo
           fps: 20,
 
-          // Área de leitura proporcional ao vídeo, não 250px fixos:
-          // com a caixa fixa o QR precisava cair num quadrado pequeno no centro.
-          qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
-            const size = Math.floor(Math.min(viewfinderWidth, viewfinderHeight) * 0.8);
-            return { width: size, height: size };
-          },
+          // SEM qrbox de proposito: a biblioteca recorta o video na area da caixa
+          // e descarta o resto. Com o QR preenchendo a caixa, a zona silenciosa
+          // (margem clara que o decodificador usa para achar os cantos) ficava
+          // fora do recorte e a leitura falhava. Sem recorte, vale o quadro
+          // inteiro — o codigo e lido perto, longe, grande ou pequeno.
+          // As marcacoes rosa na tela seguem como guia visual, nao como limite.
 
           // QR Code não é espelhado; sem isto a biblioteca testa cada quadro
           // duas vezes (normal e invertido) e gasta metade do tempo à toa.
