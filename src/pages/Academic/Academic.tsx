@@ -11,6 +11,7 @@ import { semesterLabel } from '@/utils/semester';
 import { useToast } from '@/hooks';
 import Button from '@/components/common/Button';
 import ClassGroupForm from '@/components/common/ClassGroupForm';
+import ClassGroupStudentsModal from '@/components/common/ClassGroupStudentsModal';
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal';
 import CourseForm from '@/components/common/CourseForm';
 import Toast from '@/components/common/Toast';
@@ -40,6 +41,10 @@ const Academic: React.FC = () => {
     classGroup: null,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [studentsModal, setStudentsModal] = useState<{
+    isOpen: boolean;
+    classGroup: ClassGroupResponse | null;
+  }>({ isOpen: false, classGroup: null });
 
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
@@ -441,6 +446,12 @@ const Academic: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex gap-2 justify-end">
                         <button
+                          onClick={() => setStudentsModal({ isOpen: true, classGroup })}
+                          className="px-3 py-1 text-gray-700 hover:bg-gray-700 hover:text-white border border-gray-400 rounded-lg transition-colors"
+                        >
+                          Alunos
+                        </button>
+                        <button
                           onClick={() => setClassGroupModal({ isOpen: true, classGroup })}
                           className="px-3 py-1 text-[#B7294A] hover:bg-[#B7294A] hover:text-white border border-[#B7294A] rounded-lg transition-colors"
                         >
@@ -487,6 +498,13 @@ const Academic: React.FC = () => {
         onClose={() => !isSubmitting && setClassGroupModal({ isOpen: false, classGroup: null })}
         onSubmit={handleSubmitClassGroup}
         isSubmitting={isSubmitting}
+      />
+
+      {/* Alunos da turma */}
+      <ClassGroupStudentsModal
+        isOpen={studentsModal.isOpen}
+        classGroup={studentsModal.classGroup}
+        onClose={() => setStudentsModal({ isOpen: false, classGroup: null })}
       />
 
       {/* Modal de exclusão */}

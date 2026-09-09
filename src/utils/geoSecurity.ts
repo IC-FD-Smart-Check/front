@@ -27,6 +27,16 @@ export const geoSecurity = {
    */
   getCurrentPosition: (): Promise<GeoPayload> => {
     return new Promise((resolve, reject) => {
+      // Mesma restrição da câmera: sem HTTPS o navegador bloqueia a localização
+      if (!window.isSecureContext) {
+        reject(new GeolocationError(
+          'A localização só funciona em conexão segura (HTTPS). ' +
+          `Você está acessando por ${window.location.protocol}//${window.location.host}. ` +
+          'Abra o sistema por um endereço https:// para fazer check-in.'
+        ));
+        return;
+      }
+
       if (!navigator.geolocation) {
         reject(new GeolocationError('Geolocalização não é suportada pelo seu navegador'));
         return;

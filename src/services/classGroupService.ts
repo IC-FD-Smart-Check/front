@@ -1,5 +1,5 @@
 import api from './api';
-import type { ClassGroupRequest, ClassGroupResponse } from '@/types';
+import type { ClassGroupRequest, ClassGroupResponse, UserResponse } from '@/types';
 
 export const classGroupService = {
   // GET - Lista todas as turmas
@@ -11,6 +11,12 @@ export const classGroupService = {
   // GET - Lista turmas de um curso
   getClassGroupsByCourse: async (courseId: string): Promise<ClassGroupResponse[]> => {
     const response = await api.get<ClassGroupResponse[]>(`/class-groups/course/${courseId}`);
+    return response.data;
+  },
+
+  // GET - Alunos vinculados a uma turma
+  getStudents: async (id: string): Promise<UserResponse[]> => {
+    const response = await api.get<UserResponse[]>(`/class-groups/${id}/students`);
     return response.data;
   },
 

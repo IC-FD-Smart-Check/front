@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { userService } from '@/services';
-import type { UserRequest, UserResponse } from '@/types';
+import { classGroupService, userService } from '@/services';
+import type { ClassGroupResponse, UserRequest, UserResponse } from '@/types';
 import { semesterLabel } from '@/utils/semester';
 import Button from '@/components/common/Button';
 import DeleteUserModal from '@/components/common/DeleteUserModal';
@@ -15,6 +15,9 @@ const UsersList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState<'ALL' | 'ADMIN' | 'STUDENT'>('ALL');
+  // 'ALL' = todas | 'NONE' = sem turma | id da turma
+  const [classGroupFilter, setClassGroupFilter] = useState<string>('ALL');
+  const [classGroups, setClassGroups] = useState<ClassGroupResponse[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   
   const [deleteModal, setDeleteModal] = useState<{
@@ -79,11 +82,25 @@ const UsersList: React.FC = () => {
     fetchUsers();
   }, []);
 
+  // Turmas do filtro
+  useEffect(() => {
+    classGroupService
+      .getAllClassGroups()
+      .then(setClassGroups)
+      .catch(() => setClassGroups([]));
+  }, []);
+
   useEffect(() => {
     let result = [...users];
 
     if (roleFilter !== 'ALL') {
       result = result.filter(user => user.role === roleFilter);
+    }
+
+    if (classGroupFilter === 'NONE') {
+      result = result.filter(user => !user.classGroupId);
+    } else if (classGroupFilter !== 'ALL') {
+      result = result.filter(user => user.classGroupId === classGroupFilter);
     }
 
     if (searchTerm) {
@@ -97,7 +114,7 @@ const UsersList: React.FC = () => {
     }
 
     setFilteredUsers(result);
-  }, [users, roleFilter, searchTerm]);
+  }, [users, roleFilter, classGroupFilter, searchTerm]);
 
   const handleOpenDeleteModal = (user: UserResponse) => {
     setDeleteModal({
@@ -262,6 +279,21 @@ const UsersList: React.FC = () => {
               <option value="ADMIN">Administradores</option>
               <option value="STUDENT">Alunos</option>
             </select>
+
+            {/* Filtro por turma */}
+            <select
+              value={classGroupFilter}
+              onChange={(e) => setClassGroupFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B7294A] focus:border-transparent bg-white"
+            >
+              <option value="ALL">Todas as turmas</option>
+              <option value="NONE">Sem turma</option>
+              {classGroups.map((classGroup) => (
+                <option key={classGroup.id} value={classGroup.id}>
+                  {classGroup.name} · {classGroup.courseName}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Ações */}
@@ -320,7 +352,7 @@ const UsersList: React.FC = () => {
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         {filteredUsers.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
-            {searchTerm || roleFilter !== 'ALL'
+            {searchTerm || roleFilter !== 'ALL' || classGroupFilter !== 'ALL'
               ? 'Nenhum usuário encontrado com os filtros aplicados'
               : 'Nenhum usuário cadastrado'}
           </div>

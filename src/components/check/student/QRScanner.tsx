@@ -24,6 +24,18 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onClose, isProcessing, on
       try {
         await new Promise(resolve => setTimeout(resolve, 100));
 
+        // Câmera e GPS só existem em contexto seguro (HTTPS ou localhost).
+        // Em http://IP o navegador nem expõe a API — não chega a pedir permissão.
+        if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+          onError(
+            'A câmera só funciona em conexão segura (HTTPS). ' +
+            `Você está acessando por ${window.location.protocol}//${window.location.host}. ` +
+            'Abra o sistema por um endereço https:// para escanear o QR Code.'
+          );
+          onClose();
+          return;
+        }
+
         const element = document.getElementById(qrCodeRegionId);
         if (!element) {
           console.error('Elemento não encontrado');
