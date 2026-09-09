@@ -196,8 +196,11 @@ const QRCodeManager: React.FC<QRCodeManagerProps> = ({
                       <QRCode
                         id={`qrcode-${activeQRCode.codeData}`}
                         value={activeQRCode.codeData}
-                        size={220}
-                        level="H"
+                        size={300}
+                        /* Nivel L: o codigo e exibido em tela limpa, nao impresso.
+                           H gastava 37x37 modulos para o mesmo dado; L usa 29x29,
+                           deixando cada modulo bem maior e muito mais facil de ler. */
+                        level="L"
                       />
                     </div>
 

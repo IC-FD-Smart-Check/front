@@ -1,6 +1,6 @@
 // src/components/check/student/QRScanner.tsx
 import React, { useEffect, useRef } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { X } from 'lucide-react';
 import LoadingOverlay from '@/components/common/LoadingOverlay';
 
@@ -53,18 +53,42 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onClose, isProcessing, on
           }
         }
 
-        const html5QrCode = new Html5Qrcode(qrCodeRegionId);
+        const html5QrCode = new Html5Qrcode(qrCodeRegionId, {
+          // Usa o decodificador nativo do navegador quando existe (Android/Chrome).
+          // No iOS não existe e a biblioteca cai no decodificador próprio.
+          useBarCodeDetectorIfSupported: true,
+          formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+          verbose: false,
+        });
         html5QrCodeRef.current = html5QrCode;
 
         const config = {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0,
+          // Mais tentativas de leitura por segundo
+          fps: 20,
+
+          // Área de leitura proporcional ao vídeo, não 250px fixos:
+          // com a caixa fixa o QR precisava cair num quadrado pequeno no centro.
+          qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+            const size = Math.floor(Math.min(viewfinderWidth, viewfinderHeight) * 0.8);
+            return { width: size, height: size };
+          },
+
+          // QR Code não é espelhado; sem isto a biblioteca testa cada quadro
+          // duas vezes (normal e invertido) e gasta metade do tempo à toa.
+          disableFlip: true,
+
+          // Resolução maior = QR legível de mais longe e com menos foco perfeito.
+          // Sem aspectRatio forçado: deixa a câmera usar o formato nativo dela.
+          videoConstraints: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          } as MediaTrackConstraints,
         };
 
         try {
           await html5QrCode.start(
-            { facingMode: 'environment' },
+            { facingMode: { ideal: 'environment' } },
             config,
             (decodedText) => onScan(decodedText),
             () => {}
