@@ -1,5 +1,5 @@
 import api from './api';
-import { SubscriptionResponse, UserResponse } from '@/types';
+import type { BulkSubscriptionResponse, SubscriptionResponse, UserResponse } from '@/types';
 
 export const subscriptionService = {
   listBySubEvent: async (subEventId: string): Promise<SubscriptionResponse[]> => {
@@ -9,6 +9,12 @@ export const subscriptionService = {
 
   subscribe: async (subEventId: string, userId: string): Promise<SubscriptionResponse> => {
     const response = await api.post<SubscriptionResponse>('/subscriptions', { subEventId, userId });
+    return response.data;
+  },
+
+  // POST - Inscreve varios alunos de uma vez
+  subscribeInBulk: async (subEventId: string, userIds: string[]): Promise<BulkSubscriptionResponse> => {
+    const response = await api.post<BulkSubscriptionResponse>('/subscriptions/bulk', { subEventId, userIds });
     return response.data;
   },
 

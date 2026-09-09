@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { SubscriptionResponse, UserResponse } from '@/types';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import type { SubscriptionResponse } from '@/types';
 import { subscriptionService } from '@/services';
-import Button from './Button';
+import BulkStudentPicker from './BulkStudentPicker';
 
 interface SubscriptionManagerProps {
   isOpen: boolean;
@@ -21,12 +21,14 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
   onError,
 }) => {
   const [subscriptions, setSubscriptions] = useState<SubscriptionResponse[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<UserResponse[]>([]);
   const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
-  const [searching, setSearching] = useState(false);
-  const [subscribingId, setSubscribingId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [bulkSubmitting, setBulkSubmitting] = useState(false);
+
+  const subscribedUserIds = useMemo(
+    () => new Set(subscriptions.map((s) => s.userId)),
+    [subscriptions]
+  );
 
   // Refs para callbacks estáveis — evita re-render infinito causado por arrow functions inline
   const onErrorRef = useRef(onError);
@@ -49,39 +51,24 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
   useEffect(() => {
     if (isOpen && subEventId) {
       loadSubscriptions();
-      setSearchQuery('');
-      setSearchResults([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, subEventId]);
 
-  const handleSearch = async () => {
-    if (searchQuery.trim().length < 2) return;
+  const handleBulkSubscribe = async (userIds: string[]) => {
     try {
-      setSearching(true);
-      const results = await subscriptionService.searchUsers(searchQuery.trim());
-      setSearchResults(results);
-    } catch (err: any) {
-      onErrorRef.current?.(err.response?.data?.message || 'Erro ao buscar usuários');
-    } finally {
-      setSearching(false);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') handleSearch();
-  };
-
-  const handleSubscribe = async (userId: string) => {
-    try {
-      setSubscribingId(userId);
-      await subscriptionService.subscribe(subEventId, userId);
+      setBulkSubmitting(true);
+      const result = await subscriptionService.subscribeInBulk(subEventId, userIds);
       await loadSubscriptions();
-      onSuccessRef.current?.('Usuário inscrito com sucesso!');
+
+      const partes = [`${result.subscribed} aluno(s) inscrito(s)`];
+      if (result.alreadySubscribed > 0) partes.push(`${result.alreadySubscribed} já estava(m) inscrito(s)`);
+      if (result.notFound > 0) partes.push(`${result.notFound} não encontrado(s)`);
+      onSuccessRef.current?.(partes.join(' · '));
     } catch (err: any) {
-      onErrorRef.current?.(err.response?.data?.message || 'Erro ao inscrever usuário');
+      onErrorRef.current?.(err.response?.data?.message || 'Erro ao inscrever alunos');
     } finally {
-      setSubscribingId(null);
+      setBulkSubmitting(false);
     }
   };
 
@@ -98,8 +85,6 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
     }
   };
 
-  const isAlreadySubscribed = (userId: string) =>
-    subscriptions.some(s => s.userId === userId);
 
   if (!isOpen) return null;
 
@@ -123,59 +108,15 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
 
-          {/* Busca de usuários */}
+          {/* Inscrição em massa */}
           <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
-            <h3 className="font-semibold text-gray-900 mb-3">Inscrever usuário</h3>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Buscar por nome ou email..."
-                className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#B7294A] focus:border-transparent"
-              />
-              <Button onClick={handleSearch} disabled={searching || searchQuery.trim().length < 2}>
-                {searching ? 'Buscando...' : 'Buscar'}
-              </Button>
-            </div>
-
-            {/* Resultados da busca */}
-            {searchResults.length > 0 && (
-              <div className="mt-3 space-y-2">
-                {searchResults.map(user => {
-                  const subscribed = isAlreadySubscribed(user.id);
-                  return (
-                    <div
-                      key={user.id}
-                      className="flex items-center justify-between bg-white rounded-lg px-4 py-3 border border-gray-200"
-                    >
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                        <p className="text-xs text-gray-500">{user.email || user.ra || '—'}</p>
-                      </div>
-                      {subscribed ? (
-                        <span className="text-xs text-green-600 font-semibold bg-green-50 px-3 py-1 rounded-full border border-green-200">
-                          Inscrito
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => handleSubscribe(user.id)}
-                          disabled={subscribingId === user.id}
-                          className="px-4 py-1.5 bg-[#B7294A] text-white rounded-lg hover:bg-[#9a2139] transition-colors text-sm font-medium disabled:opacity-50"
-                        >
-                          {subscribingId === user.id ? 'Inscrevendo...' : 'Inscrever'}
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {searchResults.length === 0 && searchQuery.trim().length >= 2 && !searching && (
-              <p className="mt-3 text-sm text-gray-500">Nenhum usuário encontrado.</p>
-            )}
+            <h3 className="font-semibold text-gray-900 mb-3">Inscrever alunos</h3>
+            <BulkStudentPicker
+              subscribedUserIds={subscribedUserIds}
+              isSubmitting={bulkSubmitting}
+              onSubscribe={handleBulkSubscribe}
+              onError={(message) => onErrorRef.current?.(message)}
+            />
           </div>
 
           {/* Lista de inscritos */}

@@ -293,6 +293,15 @@ export interface CheckInfoResponse {
 }
 
 // Subscription types
+export interface BulkSubscriptionResponse {
+  /** Inscrições criadas agora */
+  subscribed: number;
+  /** Já estavam inscritos — ignorados */
+  alreadySubscribed: number;
+  /** IDs que não existem mais */
+  notFound: number;
+}
+
 export interface SubscriptionResponse {
   id: string;
   userId: string;
