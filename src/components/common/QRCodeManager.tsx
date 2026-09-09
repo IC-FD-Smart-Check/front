@@ -105,11 +105,26 @@ const QRCodeManager: React.FC<QRCodeManagerProps> = ({
     const ctx = canvas.getContext('2d');
     const img = new Image();
 
-    canvas.width = 512;
-    canvas.height = 512;
+    // Zona silenciosa: a norma do QR Code exige 4 modulos de margem clara em volta.
+    // Sem ela, o fundo de onde a imagem for exibida encosta nos marcadores de canto
+    // e a leitura falha (em fundo escuro, nao le de jeito nenhum).
+    const SIZE = 1024;
+    const QUIET_ZONE = Math.round(SIZE * 0.12); // ~4,5 modulos, com folga sobre o minimo
+
+    canvas.width = SIZE;
+    canvas.height = SIZE;
 
     img.onload = () => {
-      ctx?.drawImage(img, 0, 0, 512, 512);
+      if (!ctx) return;
+
+      // Fundo branco explicito: garante que a margem seja clara mesmo que o SVG
+      // venha com transparencia
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, SIZE, SIZE);
+
+      const inner = SIZE - QUIET_ZONE * 2;
+      ctx.drawImage(img, QUIET_ZONE, QUIET_ZONE, inner, inner);
+
       canvas.toBlob((blob) => {
         if (blob) {
           const url = URL.createObjectURL(blob);
