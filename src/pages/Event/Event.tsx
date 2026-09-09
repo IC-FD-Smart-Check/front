@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { eventService } from "@/services";
 import { EventRequest, EventResponse } from "@/types";
 import Button from "@/components/common/Button";
+import EventSubscriptionManager from '@/components/common/EventSubscriptionManager';
 import DeleteEventModal from "@/components/common/DeleteEventModal";
 import EventForm from "@/components/common/EventForm";
 import Toast from "@/components/common/Toast";
@@ -15,6 +16,7 @@ import {
   Trash2,
   Layers,
   Image as ImageIcon,
+  UserPlus,
 } from "lucide-react";
 
 const Event: React.FC = () => {
@@ -30,6 +32,11 @@ const Event: React.FC = () => {
     eventId: string | null;
     eventTitle: string;
   }>({ isOpen: false, eventId: null, eventTitle: "" });
+
+  const [subscriptionModal, setSubscriptionModal] = useState<{
+    isOpen: boolean;
+    event: EventResponse | null;
+  }>({ isOpen: false, event: null });
 
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -295,6 +302,15 @@ const Event: React.FC = () => {
                   Subeventos
                 </button>
 
+                <button
+                  onClick={() => setSubscriptionModal({ isOpen: true, event })}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-700 hover:text-white rounded-lg transition-all text-sm font-semibold shadow-sm hover:shadow-md"
+                  title="Inscrever alunos em todas as atividades deste evento"
+                >
+                  <UserPlus size={16} />
+                  Inscrever
+                </button>
+
                 <div className="flex items-center gap-1 border-l border-gray-200 pl-3">
                   <button
                     onClick={() => handleOpenEditModal(event)}
@@ -316,6 +332,16 @@ const Event: React.FC = () => {
           ))}
         </div>
       )}
+
+      {/* Inscrever alunos em todas as atividades do evento */}
+      <EventSubscriptionManager
+        isOpen={subscriptionModal.isOpen}
+        eventId={subscriptionModal.event?.id ?? ''}
+        eventTitle={subscriptionModal.event?.title ?? ''}
+        onClose={() => setSubscriptionModal({ isOpen: false, event: null })}
+        onSuccess={(message) => showToast(message, 'success')}
+        onError={(message) => showToast(message, 'error')}
+      />
 
       <DeleteEventModal
         isOpen={deleteModal.isOpen}

@@ -24,6 +24,62 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
   const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [bulkSubmitting, setBulkSubmitting] = useState(false);
+  const [bulkRemoving, setBulkRemoving] = useState(false);
+  const [subscribedSearch, setSubscribedSearch] = useState('');
+  const [selectedToRemove, setSelectedToRemove] = useState<Set<string>>(new Set());
+
+  const filteredSubscriptions = useMemo(() => {
+    const term = subscribedSearch.trim().toLowerCase();
+    if (!term) return subscriptions;
+    return subscriptions.filter(
+      (sub) =>
+        sub.userName.toLowerCase().includes(term) ||
+        (sub.userEmail?.toLowerCase().includes(term) ?? false)
+    );
+  }, [subscriptions, subscribedSearch]);
+
+  const allFilteredSelected =
+    filteredSubscriptions.length > 0 &&
+    filteredSubscriptions.every((sub) => selectedToRemove.has(sub.userId));
+
+  const toggleSubscribed = (userId: string) => {
+    setSelectedToRemove((prev) => {
+      const next = new Set(prev);
+      next.has(userId) ? next.delete(userId) : next.add(userId);
+      return next;
+    });
+  };
+
+  const toggleAllSubscribed = () => {
+    setSelectedToRemove((prev) => {
+      const next = new Set(prev);
+      if (allFilteredSelected) {
+        filteredSubscriptions.forEach((sub) => next.delete(sub.userId));
+      } else {
+        filteredSubscriptions.forEach((sub) => next.add(sub.userId));
+      }
+      return next;
+    });
+  };
+
+  const handleBulkUnsubscribe = async () => {
+    if (selectedToRemove.size === 0) return;
+
+    try {
+      setBulkRemoving(true);
+      const result = await subscriptionService.unsubscribeInBulk(subEventId, [...selectedToRemove]);
+      await loadSubscriptions();
+      setSelectedToRemove(new Set());
+
+      const partes = [`${result.subscribed} inscrição(ões) removida(s)`];
+      if (result.alreadySubscribed > 0) partes.push(`${result.alreadySubscribed} já não estava(m) inscrito(s)`);
+      onSuccessRef.current?.(partes.join(' · '));
+    } catch (err: any) {
+      onErrorRef.current?.(err.response?.data?.message || 'Erro ao remover inscrições');
+    } finally {
+      setBulkRemoving(false);
+    }
+  };
 
   const subscribedUserIds = useMemo(
     () => new Set(subscriptions.map((s) => s.userId)),
@@ -51,6 +107,8 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
   useEffect(() => {
     if (isOpen && subEventId) {
       loadSubscriptions();
+      setSubscribedSearch('');
+      setSelectedToRemove(new Set());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, subEventId]);
@@ -106,7 +164,8 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+        <div className="flex-1 overflow-y-auto px-6 sm:px-8 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
           {/* Inscrição em massa */}
           <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
@@ -120,42 +179,94 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
           </div>
 
           {/* Lista de inscritos */}
-          <div>
-            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              Inscritos
-              <span className="text-xs font-normal bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                {subscriptions.length}
-              </span>
-            </h3>
+          <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                Inscritos
+                <span className="text-xs font-normal bg-white text-gray-600 px-2 py-0.5 rounded-full border border-gray-200">
+                  {subscriptions.length}
+                </span>
+              </h3>
+
+              <input
+                type="text"
+                placeholder="Filtrar inscritos..."
+                value={subscribedSearch}
+                onChange={(e) => setSubscribedSearch(e.target.value)}
+                className="w-40 sm:w-52 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#B7294A] focus:border-transparent"
+              />
+            </div>
 
             {loadingSubscriptions ? (
-              <div className="text-sm text-gray-500 py-6 text-center">Carregando...</div>
+              <div className="text-sm text-gray-500 py-8 text-center">Carregando...</div>
             ) : subscriptions.length === 0 ? (
-              <div className="text-sm text-gray-500 py-6 text-center border border-dashed border-gray-200 rounded-lg">
-                Nenhum usuário inscrito ainda.
+              <div className="text-sm text-gray-500 py-8 text-center border border-dashed border-gray-300 rounded-lg bg-white">
+                Nenhum aluno inscrito ainda.
               </div>
             ) : (
-              <div className="space-y-2">
-                {subscriptions.map(sub => (
-                  <div
-                    key={sub.id}
-                    className="flex items-center justify-between bg-white rounded-lg px-4 py-3 border border-gray-200 hover:border-gray-300 transition-colors"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{sub.userName}</p>
-                      <p className="text-xs text-gray-500">{sub.userEmail || '—'}</p>
+              <div className="flex flex-col gap-3">
+                {/* Barra de seleção */}
+                <div className="flex items-center justify-between gap-3 px-3 py-2 bg-white border border-gray-200 rounded-lg">
+                  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={allFilteredSelected}
+                      onChange={toggleAllSubscribed}
+                      disabled={filteredSubscriptions.length === 0 || bulkRemoving}
+                      className="w-4 h-4 accent-[#B7294A]"
+                    />
+                    Selecionar todos ({filteredSubscriptions.length})
+                  </label>
+                  <span className="text-sm text-gray-600 whitespace-nowrap">
+                    {selectedToRemove.size} selecionado{selectedToRemove.size !== 1 ? 's' : ''}
+                  </span>
+                </div>
+
+                <div className="border border-gray-200 rounded-lg bg-white max-h-72 overflow-y-auto">
+                  {filteredSubscriptions.length === 0 ? (
+                    <div className="py-8 text-center text-sm text-gray-500">
+                      Nenhum inscrito com esse filtro.
                     </div>
-                    <button
-                      onClick={() => handleUnsubscribe(sub.userId)}
-                      disabled={removingId === sub.userId}
-                      className="px-4 py-1.5 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium disabled:opacity-50"
-                    >
-                      {removingId === sub.userId ? 'Removendo...' : 'Remover'}
-                    </button>
-                  </div>
-                ))}
+                  ) : (
+                    <ul className="divide-y divide-gray-100">
+                      {filteredSubscriptions.map(sub => (
+                        <li key={sub.id} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50">
+                          <input
+                            type="checkbox"
+                            checked={selectedToRemove.has(sub.userId)}
+                            onChange={() => toggleSubscribed(sub.userId)}
+                            disabled={bulkRemoving}
+                            className="w-4 h-4 accent-[#B7294A] flex-shrink-0"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm text-gray-900 truncate">{sub.userName}</p>
+                            <p className="text-xs text-gray-500 truncate">{sub.userEmail || '—'}</p>
+                          </div>
+                          <button
+                            onClick={() => handleUnsubscribe(sub.userId)}
+                            disabled={removingId === sub.userId || bulkRemoving}
+                            className="px-3 py-1 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors text-xs font-medium disabled:opacity-50 whitespace-nowrap"
+                          >
+                            {removingId === sub.userId ? '...' : 'Remover'}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <button
+                  onClick={handleBulkUnsubscribe}
+                  disabled={selectedToRemove.size === 0 || bulkRemoving}
+                  className="w-full px-4 py-3 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {bulkRemoving
+                    ? 'Removendo...'
+                    : `Remover ${selectedToRemove.size > 0 ? selectedToRemove.size : ''} inscrição${selectedToRemove.size !== 1 ? 'ões' : ''}`}
+                </button>
               </div>
             )}
+          </div>
           </div>
         </div>
 

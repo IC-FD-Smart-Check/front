@@ -293,6 +293,17 @@ export interface CheckInfoResponse {
 }
 
 // Subscription types
+export interface EventBulkSubscriptionResponse {
+  /** Quantos subeventos o evento tem */
+  subEvents: number;
+  /** Alunos enviados na seleção */
+  students: number;
+  /** Inscrições criadas (alunos x subeventos) */
+  subscribed: number;
+  alreadySubscribed: number;
+  notFound: number;
+}
+
 export interface BulkSubscriptionResponse {
   /** Inscrições criadas agora */
   subscribed: number;

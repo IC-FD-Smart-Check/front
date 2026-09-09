@@ -1,5 +1,10 @@
 import api from './api';
-import type { BulkSubscriptionResponse, SubscriptionResponse, UserResponse } from '@/types';
+import type {
+  BulkSubscriptionResponse,
+  EventBulkSubscriptionResponse,
+  SubscriptionResponse,
+  UserResponse,
+} from '@/types';
 
 export const subscriptionService = {
   listBySubEvent: async (subEventId: string): Promise<SubscriptionResponse[]> => {
@@ -15,6 +20,21 @@ export const subscriptionService = {
   // POST - Inscreve varios alunos de uma vez
   subscribeInBulk: async (subEventId: string, userIds: string[]): Promise<BulkSubscriptionResponse> => {
     const response = await api.post<BulkSubscriptionResponse>('/subscriptions/bulk', { subEventId, userIds });
+    return response.data;
+  },
+
+  // POST - Remove varias inscricoes de um subevento
+  unsubscribeInBulk: async (subEventId: string, userIds: string[]): Promise<BulkSubscriptionResponse> => {
+    const response = await api.post<BulkSubscriptionResponse>('/subscriptions/bulk/remove', { subEventId, userIds });
+    return response.data;
+  },
+
+  // POST - Inscreve os alunos em TODOS os subeventos do evento
+  subscribeToEvent: async (eventId: string, userIds: string[]): Promise<EventBulkSubscriptionResponse> => {
+    const response = await api.post<EventBulkSubscriptionResponse>(
+      `/subscriptions/event/${eventId}/bulk`,
+      { userIds }
+    );
     return response.data;
   },
 

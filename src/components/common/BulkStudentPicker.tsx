@@ -11,6 +11,8 @@ interface BulkStudentPickerProps {
   isSubmitting: boolean;
   onSubscribe: (userIds: string[]) => Promise<void>;
   onError: (message: string) => void;
+  /** Texto do botão; por padrão "Inscrever N alunos" */
+  submitLabel?: string;
 }
 
 const selectClass =
@@ -21,6 +23,7 @@ const BulkStudentPicker: React.FC<BulkStudentPickerProps> = ({
   isSubmitting,
   onSubscribe,
   onError,
+  submitLabel,
 }) => {
   const [students, setStudents] = useState<UserResponse[]>([]);
   const [courses, setCourses] = useState<CourseResponse[]>([]);
@@ -252,6 +255,8 @@ const BulkStudentPicker: React.FC<BulkStudentPickerProps> = ({
           <Users size={16} />
           {isSubmitting
             ? 'Inscrevendo...'
+            : submitLabel
+            ? `${submitLabel}${selected.size > 0 ? ` (${selected.size})` : ''}`
             : `Inscrever ${selected.size > 0 ? selected.size : ''} aluno${selected.size !== 1 ? 's' : ''}`}
         </span>
       </Button>
