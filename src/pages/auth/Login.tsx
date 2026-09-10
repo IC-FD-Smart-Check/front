@@ -59,15 +59,15 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-300 p-5">
-      <div className="bg-white rounded-2xl shadow-2xl p-12 w-full max-w-md">
-        <div className="text-center mb-8">
+    <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-300 p-4 sm:p-5">
+      <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-10 w-full max-w-md">
+        <div className="text-center mb-6 sm:mb-8">
           <div className='flex justify-center items-center'>
-            <div className='w-48'>
+            <div className='w-36 sm:w-48'>
               <Logo />
             </div>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mt-4 mb-2">Bem-vindo de volta</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mt-4 mb-1 sm:mb-2">Bem-vindo de volta</h2>
           <p className="text-sm text-gray-600">Faça login para continuar</p>
         </div>
 
@@ -84,6 +84,10 @@ const Login: React.FC = () => {
               type="text"
               name="identifier"
               placeholder="Email ou RA"
+              autoComplete="username"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               value={formData.identifier}
               onChange={handleChange}
               error={errors.identifier}
@@ -98,6 +102,7 @@ const Login: React.FC = () => {
               type={showPassword ? 'text' : 'password'}
               name="password"
               placeholder="Digite sua senha"
+              autoComplete="current-password"
               value={formData.password}
               onChange={handleChange}
               error={errors.password}
@@ -107,7 +112,8 @@ const Login: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+              aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 text-gray-500 hover:text-gray-700 transition-colors"
               disabled={loading}
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -115,12 +121,12 @@ const Login: React.FC = () => {
           </div>
 
           <div className="flex justify-end -mt-2">
-            <Link to="/forgot-password" className="text-primary text-sm font-medium hover:text-primary-dark hover:underline transition-colors">
+            <Link to="/forgot-password" className="text-primary text-sm font-medium hover:text-primary-dark hover:underline transition-colors py-1">
               Esqueceu a senha?
             </Link>
           </div>
 
-          <Button type="submit" fullWidth disabled={loading}>
+          <Button type="submit" fullWidth className="py-3.5" disabled={loading}>
             {loading ? 'Entrando...' : 'Entrar'}
           </Button>
         </form>

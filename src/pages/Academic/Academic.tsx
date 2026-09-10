@@ -227,20 +227,20 @@ const Academic: React.FC = () => {
   const isCoursesTab = activeTab === 'courses';
 
   return (
-    <div className="p-6">
+    <div>
       {/* Cabeçalho */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Cursos e Turmas</h1>
-        <p className="text-gray-600">
+      <div className="mb-5 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Cursos e Turmas</h1>
+        <p className="text-sm sm:text-base text-gray-600">
           Cadastre os cursos da faculdade e as turmas que serão vinculadas aos alunos
         </p>
       </div>
 
       {/* Abas */}
-      <div className="flex gap-2 mb-6 border-b border-gray-200">
+      <div className="flex gap-2 mb-4 sm:mb-6 border-b border-gray-200">
         <button
           onClick={() => handleChangeTab('courses')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+          className={`flex-1 sm:flex-none justify-center flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
             isCoursesTab
               ? 'border-[#B7294A] text-[#B7294A]'
               : 'border-transparent text-gray-600 hover:text-gray-900'
@@ -251,7 +251,7 @@ const Academic: React.FC = () => {
         </button>
         <button
           onClick={() => handleChangeTab('classGroups')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+          className={`flex-1 sm:flex-none justify-center flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
             !isCoursesTab
               ? 'border-[#B7294A] text-[#B7294A]'
               : 'border-transparent text-gray-600 hover:text-gray-900'
@@ -263,9 +263,9 @@ const Academic: React.FC = () => {
       </div>
 
       {/* Barra de ações e filtros */}
-      <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-          <div className="flex flex-col sm:flex-row gap-4 flex-1 w-full">
+      <div className="bg-white rounded-lg shadow-sm p-4 mb-4 sm:mb-6">
+        <div className="flex flex-col md:flex-row gap-3 sm:gap-4 items-stretch md:items-center justify-between">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 flex-1 w-full">
             <input
               type="text"
               placeholder={
@@ -296,14 +296,14 @@ const Academic: React.FC = () => {
           {isCoursesTab ? (
             <Button
               onClick={() => setCourseModal({ isOpen: true, course: null })}
-              className="whitespace-nowrap"
+              className="whitespace-nowrap w-full md:w-auto !py-2.5"
             >
               + Novo Curso
             </Button>
           ) : (
             <Button
               onClick={() => setClassGroupModal({ isOpen: true, classGroup: null })}
-              className="whitespace-nowrap"
+              className="whitespace-nowrap w-full md:w-auto !py-2.5"
               disabled={courses.length === 0}
             >
               + Nova Turma
@@ -311,7 +311,7 @@ const Academic: React.FC = () => {
           )}
         </div>
 
-        <div className="mt-4 text-sm text-gray-600">
+        <div className="mt-3 sm:mt-4 text-sm text-gray-600">
           {isCoursesTab
             ? `Exibindo ${filteredCourses.length} de ${courses.length} curso(s)`
             : `Exibindo ${filteredClassGroups.length} de ${classGroups.length} turma(s)`}
@@ -326,7 +326,48 @@ const Academic: React.FC = () => {
               {searchTerm ? 'Nenhum curso encontrado com a busca aplicada' : 'Nenhum curso cadastrado'}
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            {/* Cards — celular */}
+            <div className="md:hidden divide-y divide-gray-200">
+              {filteredCourses.map((course) => (
+                <div key={course.id} className="p-4">
+                  <p className="font-medium text-gray-900 break-words">{course.name}</p>
+                  <div className="flex flex-wrap items-center gap-2 mt-2 text-sm text-gray-600">
+                    <span>
+                      {course.durationInSemesters}{' '}
+                      {course.durationInSemesters === 1 ? 'semestre' : 'semestres'}
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {classGroupCountByCourse[course.id] || 0} turma(s)
+                    </span>
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={() => setCourseModal({ isOpen: true, course })}
+                      className="flex-1 px-3 py-2 text-sm text-[#B7294A] hover:bg-[#B7294A] hover:text-white border border-[#B7294A] rounded-lg transition-colors"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() =>
+                        setDeleteModal({
+                          isOpen: true,
+                          type: 'courses',
+                          id: course.id,
+                          name: `o curso ${course.name}`,
+                        })
+                      }
+                      className="flex-1 px-3 py-2 text-sm text-red-600 hover:bg-red-600 hover:text-white border border-red-600 rounded-lg transition-colors"
+                    >
+                      Excluir
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Tabela — tablet/desktop */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
@@ -389,6 +430,7 @@ const Academic: React.FC = () => {
                 </tbody>
               </table>
             </div>
+            </>
           )
         ) : filteredClassGroups.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
@@ -399,7 +441,58 @@ const Academic: React.FC = () => {
               : 'Nenhuma turma cadastrada'}
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          {/* Cards — celular */}
+          <div className="md:hidden divide-y divide-gray-200">
+            {filteredClassGroups.map((classGroup) => (
+              <div key={classGroup.id} className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-900 break-words">{classGroup.name}</p>
+                    <p className="text-sm text-gray-600 break-words">{classGroup.courseName}</p>
+                  </div>
+                  <span className="flex-shrink-0 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    {semesterLabel(classGroup.semester)}
+                  </span>
+                </div>
+                {classGroup.externalCode && (
+                  <code className="inline-block mt-2 text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                    {classGroup.externalCode}
+                  </code>
+                )}
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={() => setStudentsModal({ isOpen: true, classGroup })}
+                    className="flex-1 px-3 py-2 text-sm text-gray-700 hover:bg-gray-700 hover:text-white border border-gray-400 rounded-lg transition-colors"
+                  >
+                    Alunos
+                  </button>
+                  <button
+                    onClick={() => setClassGroupModal({ isOpen: true, classGroup })}
+                    className="flex-1 px-3 py-2 text-sm text-[#B7294A] hover:bg-[#B7294A] hover:text-white border border-[#B7294A] rounded-lg transition-colors"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() =>
+                      setDeleteModal({
+                        isOpen: true,
+                        type: 'classGroups',
+                        id: classGroup.id,
+                        name: `a turma ${classGroup.name}`,
+                      })
+                    }
+                    className="flex-1 px-3 py-2 text-sm text-red-600 hover:bg-red-600 hover:text-white border border-red-600 rounded-lg transition-colors"
+                  >
+                    Excluir
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Tabela — tablet/desktop */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
@@ -477,6 +570,7 @@ const Academic: React.FC = () => {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
 

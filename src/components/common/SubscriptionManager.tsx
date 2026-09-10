@@ -148,12 +148,12 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90dvh] overflow-hidden flex flex-col">
 
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b-2 border-gray-200 px-8 py-6 flex items-center justify-between">
+        <div className="sticky top-0 bg-white border-b-2 border-gray-200 px-4 sm:px-8 py-4 sm:py-6 flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Inscrições</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Inscrições</h2>
             <p className="text-sm text-gray-600 mt-1">{subEventTitle}</p>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
@@ -164,7 +164,7 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-6 sm:px-8 py-6">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-4 sm:py-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
           {/* Inscrição em massa */}
@@ -275,10 +275,10 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-gray-50 border-t-2 border-gray-200 px-8 py-5 flex justify-end">
+        <div className="sticky bottom-0 bg-gray-50 border-t-2 border-gray-200 px-4 sm:px-8 py-3 sm:py-5 flex justify-end">
           <button
             onClick={onClose}
-            className="px-8 py-3 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors font-semibold"
+            className="w-full sm:w-auto px-8 py-3 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors font-semibold"
           >
             Fechar
           </button>

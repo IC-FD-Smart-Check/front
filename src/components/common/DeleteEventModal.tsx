@@ -22,12 +22,12 @@ const DeleteEventModal: React.FC<DeleteEventModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">Confirmar Exclusão</h2>
         </div>
 
         {/* Content */}
-        <div className="px-6 py-4">
+        <div className="px-4 sm:px-6 py-4">
           <div className="flex items-start gap-4">
             <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
               <svg
@@ -57,18 +57,18 @@ const DeleteEventModal: React.FC<DeleteEventModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-gray-50 rounded-b-lg flex gap-3 justify-end">
+        <div className="px-4 sm:px-6 py-4 bg-gray-50 rounded-b-lg flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
           <button
             onClick={onCancel}
             disabled={isDeleting}
-            className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancelar
           </button>
           <Button
             onClick={onConfirm}
             disabled={isDeleting}
-            className="bg-red-600 hover:bg-red-700"
+            className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
           >
             {isDeleting ? 'Excluindo...' : 'Excluir Evento'}
           </Button>

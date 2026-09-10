@@ -171,26 +171,26 @@ const Event: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
+      <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B7294A]"></div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 md:p-8 max-w-[1600px] mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+    <div className="max-w-[1600px] mx-auto">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-5 sm:mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
             Gerenciar Eventos
           </h1>
-          <p className="text-gray-500 mt-1">
+          <p className="text-sm sm:text-base text-gray-500 mt-1">
             Visualize e controle seus eventos ativos
           </p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <div className="relative group">
+          <div className="relative group flex-1 sm:flex-none">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#B7294A] transition-colors"
               size={20}
@@ -205,7 +205,7 @@ const Event: React.FC = () => {
           </div>
           <Button
             onClick={handleOpenCreateModal}
-            className="flex items-center gap-2 py-2.5 px-6 shadow-md hover:shadow-lg transition-all"
+            className="flex items-center justify-center gap-2 !py-2.5 px-6 shadow-md hover:shadow-lg transition-all"
           >
             <Plus size={20} /> Novo Evento
           </Button>
@@ -213,7 +213,7 @@ const Event: React.FC = () => {
       </div>
 
       {filteredEvents.length === 0 ? (
-        <div className="bg-white rounded-2xl p-12 text-center border border-gray-100 shadow-sm">
+        <div className="bg-white rounded-2xl p-8 sm:p-12 text-center border border-gray-100 shadow-sm">
           <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
             <Search className="text-gray-300" size={32} />
           </div>
@@ -225,13 +225,13 @@ const Event: React.FC = () => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {filteredEvents.map((event) => (
             <div
               key={event.id}
               className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:border-[#B7294A]/10 transition-all duration-300 flex flex-col overflow-hidden"
             >
-              <div className="relative h-48 bg-gray-100 overflow-hidden group-hover:opacity-95 transition-opacity">
+              <div className="relative h-40 sm:h-48 bg-gray-100 overflow-hidden group-hover:opacity-95 transition-opacity">
                 {event.imageBase64 ? (
                   <img
                     src={event.imageBase64}

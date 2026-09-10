@@ -10,18 +10,23 @@ const Sidebar: React.FC = () => {
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
 
+  // Fecha o menu ao trocar de rota
   useEffect(() => {
     setIsOpen(false);
   }, [location.pathname]);
 
+  // Trava a rolagem da página enquanto o menu está aberto e fecha com Esc
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
+    document.body.style.overflow = isOpen ? 'hidden' : 'unset';
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsOpen(false);
+    };
+    if (isOpen) window.addEventListener('keydown', onKeyDown);
+
     return () => {
       document.body.style.overflow = 'unset';
+      window.removeEventListener('keydown', onKeyDown);
     };
   }, [isOpen]);
 
@@ -44,44 +49,72 @@ const Sidebar: React.FC = () => {
     item.roles.includes(user?.role || 'STUDENT')
   );
 
+  const initial = user?.name?.charAt(0).toUpperCase() ?? '?';
+  const roleLabel = user?.role === 'ADMIN' ? 'Admin' : 'Estudante';
+
   return (
     <>
-      {!isOpen && (
+      {/* Barra superior — só no celular/tablet */}
+      <header className="lg:hidden fixed top-0 inset-x-0 h-14 z-30 bg-white border-b border-gray-200 shadow-sm flex items-center gap-2 px-3">
         <button
+          type="button"
           onClick={() => setIsOpen(true)}
-          className="lg:hidden fixed top-4 left-4 z-50 p-2.5 bg-[#B7294A] text-white rounded-lg shadow-lg"
+          aria-label="Abrir menu"
+          aria-expanded={isOpen}
+          className="p-2.5 -ml-1 rounded-lg text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition-colors"
         >
-          <Menu size={20} />
+          <Menu size={22} />
         </button>
-      )}
 
+        <Link to="/home" className="flex items-center" aria-label="Ir para a Home">
+          <div className="w-24">
+            <Logo />
+          </div>
+        </Link>
+
+        <Link
+          to="/perfil"
+          aria-label="Meu perfil"
+          className="ml-auto w-9 h-9 rounded-full bg-[#B7294A]/10 flex items-center justify-center hover:bg-[#B7294A]/20 transition-colors"
+        >
+          <span className="text-[#B7294A] font-bold text-sm">{initial}</span>
+        </Link>
+      </header>
+
+      {/* Fundo escurecido atrás do menu aberto */}
       {isOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black/50 z-40"
           onClick={() => setIsOpen(false)}
+          aria-hidden="true"
         />
       )}
 
-      <aside className={`
-        w-64 bg-white  flex flex-col
-        fixed h-screen left-0 top-0 z-40
-        transition-transform duration-300
-        lg:translate-x-0
-        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        shadow-xl lg:shadow-none
-      `}>
-        <div className="flex items-center justify-between p-4 border-b bg-[#B7294A] lg:bg-white">
+      <aside
+        aria-label="Menu principal"
+        className={`
+          w-72 max-w-[85vw] lg:w-64 bg-white flex flex-col
+          fixed h-dvh left-0 top-0 z-40
+          transition-transform duration-300
+          lg:translate-x-0
+          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+          shadow-xl lg:shadow-none lg:border-r lg:border-gray-200
+        `}
+      >
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-[#B7294A] lg:bg-white">
           <div className="lg:w-full lg:flex lg:justify-center">
             <div className="w-32 lg:block hidden">
               <Logo />
             </div>
             <h2 className="text-lg font-bold text-white lg:hidden">Menu</h2>
           </div>
-          <button 
-            onClick={() => setIsOpen(false)} 
-            className="lg:hidden p-1.5 hover:bg-white/20 rounded"
+          <button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            aria-label="Fechar menu"
+            className="lg:hidden p-2 hover:bg-white/20 rounded-lg"
           >
-            <X size={18} className="text-white" />
+            <X size={20} className="text-white" />
           </button>
         </div>
 
@@ -94,38 +127,38 @@ const Sidebar: React.FC = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-3 py-2.5 mb-1 rounded-lg text-sm font-medium transition-colors ${
+                aria-current={isActive ? 'page' : undefined}
+                className={`flex items-center gap-3 px-3 py-3 lg:py-2.5 mb-1 rounded-lg text-[15px] lg:text-sm font-medium transition-colors ${
                   isActive
                     ? 'bg-[#B7294A]/10 text-[#B7294A]'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    : 'text-gray-700 hover:bg-gray-100 active:bg-gray-200'
                 }`}
               >
-                <Icon size={18} />
+                <Icon size={20} className="lg:w-[18px] lg:h-[18px]" />
                 <span>{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-3 border-t bg-gray-50">
+        <div className="p-3 border-t border-gray-200 bg-gray-50 pb-safe">
           <Link
             to="/perfil"
-            className="flex items-center gap-2 p-2.5 mb-2 bg-white rounded-lg border hover:border-[#B7294A] hover:bg-[#B7294A]/5 transition-colors"
+            className="flex items-center gap-3 p-3 lg:p-2.5 mb-2 bg-white rounded-lg border border-gray-200 hover:border-[#B7294A] hover:bg-[#B7294A]/5 transition-colors"
           >
-            <div className="w-8 h-8 rounded-full bg-[#B7294A]/10 flex items-center justify-center">
-              <span className="text-[#B7294A] font-bold text-xs">
-                {user?.name?.charAt(0).toUpperCase()}
-              </span>
+            <div className="w-9 h-9 lg:w-8 lg:h-8 rounded-full bg-[#B7294A]/10 flex items-center justify-center flex-shrink-0">
+              <span className="text-[#B7294A] font-bold text-sm lg:text-xs">{initial}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-gray-900 text-xs truncate">{user?.name}</p>
-              <p className="text-xs text-gray-600">{user?.role === 'ADMIN' ? 'Admin' : 'Estudante'}</p>
+              <p className="font-semibold text-gray-900 text-sm lg:text-xs truncate">{user?.name}</p>
+              <p className="text-xs text-gray-600">{roleLabel}</p>
             </div>
           </Link>
 
           <button
+            type="button"
             onClick={handleLogout}
-            className="flex items-center justify-center gap-2 w-full px-3 py-2.5 bg-white border rounded-lg text-gray-700 text-xs font-medium hover:bg-red-50 hover:border-red-300 hover:text-red-600"
+            className="flex items-center justify-center gap-2 w-full px-3 py-3 lg:py-2.5 bg-white border border-gray-200 rounded-lg text-gray-700 text-sm lg:text-xs font-medium hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-colors"
           >
             <LogOut size={16} />
             <span>Sair</span>

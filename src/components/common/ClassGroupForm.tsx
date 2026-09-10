@@ -137,9 +137,9 @@ const ClassGroupForm: React.FC<ClassGroupFormProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90dvh] overflow-y-auto">
         {/* Cabeçalho */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
           <h2 className="text-xl font-bold text-gray-900">
             {isEditMode ? 'Editar Turma' : 'Nova Turma'}
           </h2>
@@ -151,7 +151,7 @@ const ClassGroupForm: React.FC<ClassGroupFormProps> = ({
         </div>
 
         {/* Formulário */}
-        <form onSubmit={handleSubmit} className="px-6 py-4">
+        <form onSubmit={handleSubmit} className="px-4 sm:px-6 py-4">
           <div className="space-y-4">
             {/* Curso */}
             <div>
@@ -253,19 +253,19 @@ const ClassGroupForm: React.FC<ClassGroupFormProps> = ({
           </div>
 
           {/* Botões */}
-          <div className="flex gap-3 justify-end mt-6 pt-4 border-t border-gray-200">
+          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end mt-6 pt-4 border-t border-gray-200">
             <button
               type="button"
               onClick={handleClose}
               disabled={isSubmitting}
-              className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isSubmitting || courses.length === 0}
-              className="px-4 py-2 rounded-lg bg-[#B7294A] text-white hover:bg-[#9a1f3d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-lg bg-[#B7294A] text-white font-medium hover:bg-[#9a1f3d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isSubmitting
                 ? isEditMode

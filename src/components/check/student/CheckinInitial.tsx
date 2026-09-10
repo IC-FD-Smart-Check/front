@@ -18,17 +18,18 @@ const CheckinInitial: React.FC<CheckinInitialProps> = ({ onOpenCamera }) => {
           </p>
         </div>
 
-        <div className="p-6 sm:p-8 md:p-12 flex flex-col items-center gap-4 sm:gap-6">
-          <div className="text-center mb-2 sm:mb-4">
-            <p className="text-sm sm:text-base text-gray-600 mb-2">
-              Clique no botão abaixo para abrir a câmera
+        <div className="p-5 sm:p-8 md:p-12 flex flex-col items-center gap-4 sm:gap-6">
+          <div className="text-center mb-1 sm:mb-4">
+            <p className="text-sm sm:text-base text-gray-600 mb-1.5">
+              Toque no botão abaixo para abrir a câmera
             </p>
             <p className="text-xs sm:text-sm text-gray-500">
-              Você precisará permitir acesso à câmera
+              Você precisará permitir o acesso à câmera e à localização
             </p>
           </div>
 
-          <Button onClick={onOpenCamera} fullWidth className="py-3 sm:py-4 text-base sm:text-lg">
+          <Button onClick={onOpenCamera} fullWidth className="py-3.5 sm:py-4 text-base sm:text-lg flex items-center justify-center gap-2">
+            <Camera size={20} />
             Abrir Câmera
           </Button>
         </div>

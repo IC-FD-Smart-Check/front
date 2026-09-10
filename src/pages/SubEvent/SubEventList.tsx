@@ -213,7 +213,7 @@ const SubEventList: React.FC = () => {
 
   if (error || !event) {
     return (
-      <div className="p-6">
+      <div>
         <div className="bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
           <p className="text-red-700">{error || 'Evento não encontrado'}</p>
           <button
@@ -228,21 +228,21 @@ const SubEventList: React.FC = () => {
   }
 
   return (
-    <div className="p-6 md:p-8 max-w-[1600px] mx-auto">
+    <div className="max-w-[1600px] mx-auto">
       {/* Cabeçalho */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <div>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-5 sm:mb-8">
+        <div className="min-w-0">
           <button
             onClick={() => navigate('/events')}
-            className="flex items-center gap-1.5 text-sm text-[#B7294A] hover:text-[#9a2139] font-medium mb-2 transition-colors"
+            className="flex items-center gap-1.5 text-sm text-[#B7294A] hover:text-[#9a2139] font-medium mb-2 py-1 transition-colors"
           >
             <ArrowLeft size={16} />
             Voltar para Eventos
           </button>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">
             {event.title}
           </h1>
-          <p className="text-gray-500 mt-1">
+          <p className="text-sm sm:text-base text-gray-500 mt-1">
             {formatDate(event.startDate)} até {formatDate(event.endDate)}
             {subEvents.length > 0 && (
               <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
@@ -254,7 +254,7 @@ const SubEventList: React.FC = () => {
 
         <Button
           onClick={handleOpenCreateModal}
-          className="flex items-center gap-2 py-2.5 px-6 shadow-md hover:shadow-lg transition-all whitespace-nowrap"
+          className="w-full md:w-auto flex items-center justify-center gap-2 !py-2.5 px-6 shadow-md hover:shadow-lg transition-all whitespace-nowrap"
         >
           <Plus size={20} /> Novo Subevento
         </Button>
@@ -279,7 +279,7 @@ const SubEventList: React.FC = () => {
           {subEvents.map((subEvent) => (
             <div key={subEvent.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-[#B7294A]/10 transition-all duration-200">
               {/* Cabeçalho do card */}
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 p-5 border-b border-gray-100">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4 p-4 sm:p-5 border-b border-gray-100">
                 <div className="flex-1 min-w-0">
                   <h3 className="text-base font-bold text-gray-900 leading-tight">
                     {subEvent.title}
@@ -291,28 +291,29 @@ const SubEventList: React.FC = () => {
                   )}
                 </div>
 
-                <div className="flex flex-wrap gap-2 lg:flex-shrink-0">
+                {/* No celular os 4 botões viram uma grade 2x2 com área de toque maior */}
+                <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 lg:flex-shrink-0">
                   <button
                     onClick={() => handleOpenSubscriptionModal(subEvent)}
-                    className="px-3 py-1.5 text-gray-600 hover:bg-gray-800 hover:text-white border border-gray-300 rounded-lg transition-colors text-sm font-medium"
+                    className="px-3 py-2 sm:py-1.5 text-gray-600 hover:bg-gray-800 hover:text-white border border-gray-300 rounded-lg transition-colors text-sm font-medium"
                   >
                     Inscrições
                   </button>
                   <button
                     onClick={() => handleOpenQRCodeModal(subEvent)}
-                    className="px-3 py-1.5 text-gray-600 hover:bg-gray-800 hover:text-white border border-gray-300 rounded-lg transition-colors text-sm font-medium"
+                    className="px-3 py-2 sm:py-1.5 text-gray-600 hover:bg-gray-800 hover:text-white border border-gray-300 rounded-lg transition-colors text-sm font-medium"
                   >
                     QR Codes
                   </button>
                   <button
                     onClick={() => handleOpenEditModal(subEvent)}
-                    className="px-3 py-1.5 text-[#B7294A] hover:bg-[#B7294A] hover:text-white border border-[#B7294A] rounded-lg transition-colors text-sm font-medium"
+                    className="px-3 py-2 sm:py-1.5 text-[#B7294A] hover:bg-[#B7294A] hover:text-white border border-[#B7294A] rounded-lg transition-colors text-sm font-medium"
                   >
                     Editar
                   </button>
                   <button
                     onClick={() => handleDelete(subEvent)}
-                    className="px-3 py-1.5 text-red-600 hover:bg-red-600 hover:text-white border border-red-200 rounded-lg transition-colors text-sm font-medium"
+                    className="px-3 py-2 sm:py-1.5 text-red-600 hover:bg-red-600 hover:text-white border border-red-200 rounded-lg transition-colors text-sm font-medium"
                   >
                     Excluir
                   </button>
@@ -320,7 +321,7 @@ const SubEventList: React.FC = () => {
               </div>
 
               {/* Informações */}
-              <div className="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
+              <div className="p-4 sm:p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
                 {/* Período */}
                 <div className="border border-gray-200 rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-3">
@@ -372,7 +373,7 @@ const SubEventList: React.FC = () => {
 
               {/* Localização */}
               {((subEvent.latitude && subEvent.longitude) || subEvent.locationDescription) && (
-                <div className="mx-5 mb-5 border border-gray-200 bg-gray-50 rounded-xl p-4">
+                <div className="mx-4 mb-4 sm:mx-5 sm:mb-5 border border-gray-200 bg-gray-50 rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-7 h-7 rounded-lg bg-[#B7294A]/10 flex items-center justify-center">
                       <svg className="w-4 h-4 text-[#B7294A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">

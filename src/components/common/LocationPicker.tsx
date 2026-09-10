@@ -175,7 +175,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
           key={mapKey}
           center={currentPosition as L.LatLngExpression}
           zoom={latitude && longitude ? 15 : 14}
-          style={{ height: '400px', width: '100%' }}
+          style={{ height: 'clamp(260px, 45dvh, 400px)', width: '100%' }}
           className="z-0"
         >
           <TileLayer

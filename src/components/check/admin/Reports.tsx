@@ -290,7 +290,7 @@ export default function Reports() {
     const selectedSubevento = subeventos.find(s => s.id === selectedSubeventoId);
 
     return (
-      <div className="p-4 sm:p-6">
+      <div>
         <div className="mb-5 sm:mb-6">
           <button
             onClick={() => setSelectedSubeventoId('')}
@@ -486,7 +486,7 @@ export default function Reports() {
     const selectedEvent = events.find(e => e.id === selectedEventId);
 
     return (
-      <div className="p-4 sm:p-6">
+      <div>
         <div className="mb-5 sm:mb-6">
           <button
             onClick={() => setSelectedEventId('')}
@@ -618,7 +618,7 @@ export default function Reports() {
   }
 
   return (
-    <div className="p-4 sm:p-6">
+    <div>
       <div className="mb-5 sm:mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
           Relatórios de Presença

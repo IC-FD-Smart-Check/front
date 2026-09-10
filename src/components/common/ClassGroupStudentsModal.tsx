@@ -59,9 +59,9 @@ const ClassGroupStudentsModal: React.FC<ClassGroupStudentsModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[85vh] flex flex-col">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[85dvh] flex flex-col">
         {/* Cabeçalho */}
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
           <div className="flex items-start gap-3">
             <div className="w-11 h-11 rounded-xl bg-[#B7294A]/10 flex items-center justify-center flex-shrink-0">
               <Users size={20} className="text-[#B7294A]" />
@@ -101,7 +101,8 @@ const ClassGroupStudentsModal: React.FC<ClassGroupStudentsModalProps> = ({
                 : 'Nenhum aluno encontrado com essa busca.'}
             </div>
           ) : (
-            <table className="w-full">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[480px]">
               <thead className="bg-gray-50 border-b border-gray-200 sticky top-0">
                 <tr>
                   <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -129,10 +130,11 @@ const ClassGroupStudentsModal: React.FC<ClassGroupStudentsModalProps> = ({
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200 flex justify-end">
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"

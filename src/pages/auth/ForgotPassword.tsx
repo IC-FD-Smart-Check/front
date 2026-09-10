@@ -40,10 +40,14 @@ const ForgotPassword: React.FC = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-300 p-5">
-        <div className="bg-white rounded-2xl shadow-2xl p-12 w-full max-w-md">
-          <div className="text-center mb-8">
-            <Logo />
+      <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-300 p-4 sm:p-5">
+        <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-10 w-full max-w-md">
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="flex justify-center items-center">
+              <div className="w-36 sm:w-48">
+                <Logo />
+              </div>
+            </div>
             <h2 className="text-2xl font-bold text-gray-900 mt-4 mb-2">Solicitação enviada!</h2>
             <p className="text-sm text-gray-600">
               Sua solicitação foi enviada. Aguarde o contato para redefinir sua senha.
@@ -60,10 +64,14 @@ const ForgotPassword: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-300 p-5">
-      <div className="bg-white rounded-2xl shadow-2xl p-12 w-full max-w-md">
-        <div className="text-center mb-8">
-          <Logo />
+    <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-300 p-4 sm:p-5">
+      <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-10 w-full max-w-md">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="flex justify-center items-center">
+            <div className="w-36 sm:w-48">
+              <Logo />
+            </div>
+          </div>
           <h2 className="text-2xl font-bold text-gray-900 mt-4 mb-2">Esqueceu a senha?</h2>
           <p className="text-sm text-gray-600">
             Digite seu email para solicitar a redefinição de senha
@@ -83,6 +91,9 @@ const ForgotPassword: React.FC = () => {
               type="email"
               name="email"
               placeholder="seu.email@instituicao.edu.br"
+              inputMode="email"
+              autoComplete="email"
+              autoCapitalize="none"
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);

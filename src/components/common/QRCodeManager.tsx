@@ -146,11 +146,11 @@ const QRCodeManager: React.FC<QRCodeManagerProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90dvh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b-2 border-gray-200 px-8 py-6 flex items-center justify-between">
+        <div className="sticky top-0 bg-white border-b-2 border-gray-200 px-4 sm:px-8 py-4 sm:py-6 flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Gerenciar QR Codes</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Gerenciar QR Codes</h2>
             <p className="text-sm text-gray-600 mt-2">{subEventTitle}</p>
           </div>
           <button
@@ -164,7 +164,7 @@ const QRCodeManager: React.FC<QRCodeManagerProps> = ({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-8 py-6">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-4 sm:py-6">
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-lg text-gray-600">Carregando...</div>
@@ -172,7 +172,7 @@ const QRCodeManager: React.FC<QRCodeManagerProps> = ({
           ) : (
             <div className="space-y-6">
               {/* Botão de gerar novo QR Code */}
-              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200 shadow-sm">
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 sm:p-6 border border-gray-200 shadow-sm">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900 text-lg">Gerar Novo QR Code</h3>
@@ -192,7 +192,7 @@ const QRCodeManager: React.FC<QRCodeManagerProps> = ({
 
               {/* QR Code Ativo */}
               {activeQRCode && (
-                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-8 border-2 border-green-400 shadow-lg">
+                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 sm:p-8 border-2 border-green-400 shadow-lg">
                   <div className="flex items-start gap-3 mb-6">
                     <div className="flex-shrink-0 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-md">
                       <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -205,13 +205,16 @@ const QRCodeManager: React.FC<QRCodeManagerProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex flex-col lg:flex-row gap-8 items-start">
+                  <div className="flex flex-col lg:flex-row gap-5 sm:gap-8 items-stretch lg:items-start">
                     {/* QR Code visual */}
-                    <div className="bg-white p-6 rounded-xl shadow-md border-2 border-gray-200">
+                    <div className="bg-white p-3 sm:p-6 rounded-xl shadow-md border-2 border-gray-200 w-full max-w-[340px] mx-auto lg:mx-0 flex-shrink-0">
                       <QRCode
                         id={`qrcode-${activeQRCode.codeData}`}
                         value={activeQRCode.codeData}
                         size={300}
+                        /* Escala com a largura do card para não estourar o modal no celular */
+                        style={{ width: '100%', height: 'auto', maxWidth: 300, display: 'block' }}
+                        viewBox="0 0 300 300"
                         /* Nivel L: o codigo e exibido em tela limpa, nao impresso.
                            H gastava 37x37 modulos para o mesmo dado; L usa 29x29,
                            deixando cada modulo bem maior e muito mais facil de ler. */
@@ -291,10 +294,10 @@ const QRCodeManager: React.FC<QRCodeManagerProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-gray-50 border-t-2 border-gray-200 px-8 py-5 flex justify-end">
+        <div className="sticky bottom-0 bg-gray-50 border-t-2 border-gray-200 px-4 sm:px-8 py-3 sm:py-5 flex justify-end">
           <button
             onClick={onClose}
-            className="px-8 py-3 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors font-semibold"
+            className="w-full sm:w-auto px-8 py-3 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors font-semibold"
           >
             Fechar
           </button>

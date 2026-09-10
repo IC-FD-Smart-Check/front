@@ -271,10 +271,10 @@ const StudentImport: React.FC = () => {
   const acceptedExtensions = selectedTemplate?.acceptedExtensions.join(',') ?? '.csv';
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
+    <div className="max-w-5xl mx-auto">
       {/* Cabeçalho */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Importar Alunos</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Importar Alunos</h1>
         <p className="text-gray-600">
           Envie o relatório exportado pelo sistema acadêmico. Os alunos são vinculados às turmas
           pelo identificador cadastrado em Cursos e Turmas.
@@ -282,7 +282,7 @@ const StudentImport: React.FC = () => {
       </div>
 
       {/* Passo 1 — template e arquivo */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-6">
         <div className="space-y-4">
           <div>
             <label htmlFor="templateId" className="block text-sm font-medium text-gray-700 mb-1">

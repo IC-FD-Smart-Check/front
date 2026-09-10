@@ -75,9 +75,9 @@ const EventSubscriptionManager: React.FC<EventSubscriptionManagerProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[92vh] flex flex-col">
+      <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[92dvh] flex flex-col">
         {/* Cabeçalho */}
-        <div className="px-6 sm:px-8 py-5 border-b-2 border-gray-200 flex items-start justify-between gap-4">
+        <div className="px-4 sm:px-8 py-4 sm:py-5 border-b-2 border-gray-200 flex items-start justify-between gap-4">
           <div className="flex items-start gap-3 min-w-0">
             <div className="w-11 h-11 rounded-xl bg-[#B7294A]/10 flex items-center justify-center flex-shrink-0">
               <CalendarCheck size={20} className="text-[#B7294A]" />
@@ -94,7 +94,7 @@ const EventSubscriptionManager: React.FC<EventSubscriptionManagerProps> = ({
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 sm:px-8 py-6 flex flex-col gap-5">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-4 sm:py-6 flex flex-col gap-5">
           {/* Aviso do escopo da operação */}
           <div className="bg-yellow-50 border-l-4 border-yellow-400 rounded p-4 flex items-start gap-3">
             <AlertTriangle size={20} className="text-yellow-600 flex-shrink-0 mt-0.5" />
@@ -137,10 +137,10 @@ const EventSubscriptionManager: React.FC<EventSubscriptionManagerProps> = ({
           )}
         </div>
 
-        <div className="px-6 sm:px-8 py-4 border-t-2 border-gray-200 bg-gray-50 flex justify-end">
+        <div className="px-4 sm:px-8 py-3 sm:py-4 border-t-2 border-gray-200 bg-gray-50 flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors font-semibold"
+            className="w-full sm:w-auto px-6 py-2.5 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors font-semibold"
           >
             Fechar
           </button>

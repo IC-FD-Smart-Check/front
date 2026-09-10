@@ -72,28 +72,28 @@ const Profile: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Meu Perfil</h1>
-        <p className="text-gray-600">Atualize seu email e sua senha de acesso</p>
+    <div className="max-w-2xl mx-auto">
+      <div className="mb-5 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Meu Perfil</h1>
+        <p className="text-sm sm:text-base text-gray-600">Atualize seu email e sua senha de acesso</p>
       </div>
 
       {/* Identificação (somente leitura) */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-[#B7294A]/10 flex items-center justify-center flex-shrink-0">
+      <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#B7294A]/10 flex items-center justify-center flex-shrink-0">
             <span className="text-[#B7294A] font-bold text-lg">
               {user?.name?.charAt(0).toUpperCase()}
             </span>
           </div>
           <div className="min-w-0">
-            <h2 className="font-semibold text-gray-900 truncate">{user?.name}</h2>
+            <h2 className="font-semibold text-gray-900 leading-snug break-words">{user?.name}</h2>
             <p className="text-sm text-gray-600">
               {user?.role === 'ADMIN' ? 'Administrador' : 'Estudante'}
               {user?.ra && ` · RA ${user.ra}`}
             </p>
             {user?.classGroupName && (
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-xs text-gray-500 mt-0.5 break-words">
                 {user.classGroupName} · {user.courseName}
               </p>
             )}
@@ -102,7 +102,7 @@ const Profile: React.FC = () => {
       </div>
 
       {/* Email */}
-      <form onSubmit={handleSubmitEmail} className="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <form onSubmit={handleSubmitEmail} className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
         <div className="flex items-center gap-2 mb-4">
           <Mail size={18} className="text-[#B7294A]" />
           <h2 className="text-lg font-semibold text-gray-900">Email</h2>
@@ -119,6 +119,9 @@ const Profile: React.FC = () => {
           name="email"
           type="email"
           placeholder="seu.email@exemplo.com"
+          inputMode="email"
+          autoComplete="email"
+          autoCapitalize="none"
           value={email}
           onChange={(e) => {
             setEmail(e.target.value);
@@ -129,14 +132,18 @@ const Profile: React.FC = () => {
         />
 
         <div className="flex justify-end mt-4">
-          <Button type="submit" disabled={savingEmail || email.trim() === (user?.email ?? '')}>
+          <Button
+            type="submit"
+            className="w-full sm:w-auto"
+            disabled={savingEmail || email.trim() === (user?.email ?? '')}
+          >
             {savingEmail ? 'Salvando...' : 'Salvar email'}
           </Button>
         </div>
       </form>
 
       {/* Senha */}
-      <form onSubmit={handleSubmitPassword} className="bg-white rounded-lg shadow-sm p-6">
+      <form onSubmit={handleSubmitPassword} className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
         <div className="flex items-center gap-2 mb-4">
           <KeyRound size={18} className="text-[#B7294A]" />
           <h2 className="text-lg font-semibold text-gray-900">Alterar senha</h2>
@@ -150,6 +157,7 @@ const Profile: React.FC = () => {
             <Input
               id="current"
               type="password"
+              autoComplete="current-password"
               value={passwords.current}
               onChange={(e) => changePassword('current', e.target.value)}
               error={passwordErrors.current}
@@ -165,6 +173,7 @@ const Profile: React.FC = () => {
               id="next"
               type="password"
               placeholder="Mínimo de 6 caracteres"
+              autoComplete="new-password"
               value={passwords.next}
               onChange={(e) => changePassword('next', e.target.value)}
               error={passwordErrors.next}
@@ -179,6 +188,7 @@ const Profile: React.FC = () => {
             <Input
               id="confirm"
               type="password"
+              autoComplete="new-password"
               value={passwords.confirm}
               onChange={(e) => changePassword('confirm', e.target.value)}
               error={passwordErrors.confirm}
@@ -188,7 +198,7 @@ const Profile: React.FC = () => {
         </div>
 
         <div className="flex justify-end mt-4">
-          <Button type="submit" disabled={savingPassword}>
+          <Button type="submit" className="w-full sm:w-auto" disabled={savingPassword}>
             {savingPassword ? 'Alterando...' : 'Alterar senha'}
           </Button>
         </div>

@@ -169,9 +169,10 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onClose, isProcessing, on
         </div>
 
         {/* Camera Container */}
-        <div 
-          className="relative bg-black flex items-center justify-center overflow-hidden rounded-b-2xl" 
-          style={{ minHeight: '300px', height: '60vh', maxHeight: '500px' }}
+        {/* dvh desconta a barra do navegador no celular; assim a câmera não fica cortada */}
+        <div
+          className="relative bg-black flex items-center justify-center overflow-hidden"
+          style={{ minHeight: '300px', height: 'min(60dvh, 500px)' }}
         >
           <div id={qrCodeRegionId} style={{ width: '100%', height: '100%' }} />
           <LoadingOverlay

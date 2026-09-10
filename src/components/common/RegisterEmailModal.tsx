@@ -63,8 +63,8 @@ const RegisterEmailModal: React.FC<RegisterEmailModalProps> = ({ isOpen }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-        <div className="px-6 py-5 border-b border-gray-200">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90dvh] overflow-y-auto">
+        <div className="px-4 sm:px-6 py-5 border-b border-gray-200">
           <div className="flex items-start gap-3">
             <div className="w-11 h-11 rounded-xl bg-[#B7294A]/10 flex items-center justify-center flex-shrink-0">
               <Mail size={20} className="text-[#B7294A]" />
@@ -81,14 +81,16 @@ const RegisterEmailModal: React.FC<RegisterEmailModalProps> = ({ isOpen }) => {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 py-5">
+        <form onSubmit={handleSubmit} className="px-4 sm:px-6 py-5">
           <label htmlFor="profileEmail" className="block text-sm font-medium text-gray-700 mb-1">
             Email <span className="text-red-500">*</span>
           </label>
           <input
             id="profileEmail"
             type="email"
-            autoFocus
+            inputMode="email"
+            autoComplete="email"
+            autoCapitalize="none"
             placeholder="seu.email@exemplo.com"
             value={email}
             onChange={(e) => {
@@ -111,14 +113,14 @@ const RegisterEmailModal: React.FC<RegisterEmailModalProps> = ({ isOpen }) => {
               type="button"
               onClick={dismissEmailPrompt}
               disabled={isSaving}
-              className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Agora não
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="px-4 py-2 rounded-lg bg-[#B7294A] text-white hover:bg-[#9a1f3d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2.5 rounded-lg bg-[#B7294A] text-white font-medium hover:bg-[#9a1f3d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isSaving ? 'Salvando...' : 'Salvar email'}
             </button>

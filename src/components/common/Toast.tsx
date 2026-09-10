@@ -55,16 +55,22 @@ const Toast: React.FC<ToastProps> = ({
   const { icon: Icon, bgColor, borderColor, textColor, iconColor } = config[type];
 
   return (
-    <div className="fixed top-4 right-4 z-[100] animate-slide-in-right">
+    // No celular ocupa a largura da tela (abaixo da barra superior); no desktop fica no canto
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed z-[100] top-[4.25rem] lg:top-4 left-3 right-3 sm:left-auto sm:right-4 animate-slide-in-right"
+    >
       <div
-        className={`${bgColor} ${borderColor} ${textColor} border rounded-lg shadow-lg p-4 pr-12 max-w-md min-w-[300px]`}
+        className={`${bgColor} ${borderColor} ${textColor} border rounded-lg shadow-lg p-4 pr-12 sm:min-w-[300px] sm:max-w-md`}
       >
         <div className="flex items-start gap-3">
           <Icon className={`${iconColor} flex-shrink-0 mt-0.5`} size={20} />
           <p className="text-sm font-medium flex-1">{message}</p>
           <button
             onClick={onClose}
-            className={`${textColor} hover:opacity-70 transition-opacity absolute top-3 right-3`}
+            aria-label="Fechar aviso"
+            className={`${textColor} hover:opacity-70 transition-opacity absolute top-2.5 right-2.5 p-1`}
           >
             <X size={18} />
           </button>

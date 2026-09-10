@@ -9,6 +9,13 @@
     overflow-x: hidden;
     width: 100%;
     max-width: 100vw;
+    /* Evita que o iOS aumente a fonte sozinho ao girar a tela */
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    min-height: 100dvh;
+    @apply bg-gray-50 text-gray-900;
   }
 
   * {
@@ -19,9 +26,35 @@
     overflow-x: hidden;
     width: 100%;
   }
+
+  /* Remove o realce azul do toque e o atraso de 300ms no celular */
+  button,
+  a,
+  [role='button'] {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* iOS dá zoom automático em campos com fonte < 16px; garante 16px no celular */
+  @media (max-width: 640px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
 }
 
 @layer utilities {
+  /* Áreas seguras de iPhones com notch / barra inferior */
+  .pb-safe {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+
   @keyframes slide-in-right {
     from {
       transform: translateX(100%);

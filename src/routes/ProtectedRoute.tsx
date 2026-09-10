@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks';
 import { useAuthStore } from '@/store/authStore';
 import RegisterEmailModal from '@/components/common/RegisterEmailModal';
-import Sidebar from '@/components/layout/Sidebar';
+import Layout from '@/components/layout/Layout';
 import type { RouteConfig } from './routesConfig';
 
 interface ProtectedRouteProps {
@@ -41,14 +41,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ config }) => {
   // Renderizar com ou sem layout
   if (layout) {
     return (
-      <div className="flex min-h-screen bg-gray-50">
-        <Sidebar />
-        {/* ml-64 abre espaço para a sidebar fixa; min-w-0 evita que tabelas largas estourem a largura */}
-        <main className="flex-1 min-w-0 p-8 pt-16 lg:pt-8 lg:ml-64">
+      <>
+        <Layout>
           <Component />
-        </main>
+        </Layout>
         <RegisterEmailModal isOpen={needsEmail} />
-      </div>
+      </>
     );
   }
 

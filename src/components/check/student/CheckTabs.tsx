@@ -8,7 +8,7 @@ interface CheckTabsProps {
 
 const CheckTabs: React.FC<CheckTabsProps> = ({ activeTab, onTabChange }) => {
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
+    <div className="bg-white rounded-xl shadow overflow-hidden mb-4 sm:mb-6">
       <div className="flex border-b border-gray-200">
         <button
           onClick={() => onTabChange('checkin')}

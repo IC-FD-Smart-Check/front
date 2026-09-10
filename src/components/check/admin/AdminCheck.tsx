@@ -57,7 +57,7 @@ const AdminCheck: React.FC = () => {
   );
 
   return (
-    <div className="relative space-y-6">
+    <div className="relative space-y-4 sm:space-y-6">
       <LoadingOverlay isVisible={isLoading} />
       <Toast
         message={toast.message}
@@ -70,6 +70,7 @@ const AdminCheck: React.FC = () => {
         totalEvents={stats.totalCheckins}
         totalCheckIns={stats.presentCount}
         totalCheckOuts={stats.checkoutCount}
+        eventsLabel="Registros"
       />
 
       {/* Filtros */}
