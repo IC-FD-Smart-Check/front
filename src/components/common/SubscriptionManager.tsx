@@ -180,7 +180,7 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
 
           {/* Lista de inscritos */}
           <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
-            <div className="flex items-center justify-between gap-3 mb-3">
+            <div className="flex flex-col gap-3 mb-3">
               <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                 Inscritos
                 <span className="text-xs font-normal bg-white text-gray-600 px-2 py-0.5 rounded-full border border-gray-200">
@@ -190,10 +190,10 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
 
               <input
                 type="text"
-                placeholder="Filtrar inscritos..."
+                placeholder="Filtrar inscritos por nome ou email..."
                 value={subscribedSearch}
                 onChange={(e) => setSubscribedSearch(e.target.value)}
-                className="w-40 sm:w-52 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#B7294A] focus:border-transparent"
+                className="w-full min-w-0 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#B7294A] focus:border-transparent"
               />
             </div>
 
@@ -222,7 +222,7 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
                   </span>
                 </div>
 
-                <div className="border border-gray-200 rounded-lg bg-white max-h-72 overflow-y-auto">
+                <div className="border border-gray-200 rounded-lg bg-white max-h-[26rem] overflow-y-auto">
                   {filteredSubscriptions.length === 0 ? (
                     <div className="py-8 text-center text-sm text-gray-500">
                       Nenhum inscrito com esse filtro.

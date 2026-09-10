@@ -159,6 +159,7 @@ export interface EventRequest {
   imageBase64?: string;
   latitude?: number;
   longitude?: number;
+  radius?: number;
   startDate: string;
   endDate: string;
 }
@@ -170,6 +171,8 @@ export interface EventResponse {
   imageBase64?: string;
   latitude?: number;
   longitude?: number;
+  /** Raio de validação do check-in, em metros — herdado pelos subeventos */
+  radius?: number;
   startDate: string;
   endDate: string;
   createdAt?: string;

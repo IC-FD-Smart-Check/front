@@ -126,7 +126,9 @@ const Home: React.FC = () => {
 
       <div className="bg-white p-6 rounded-xl shadow-sm">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Próximos Eventos</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            {isAdmin ? 'Próximos Eventos' : 'Meus Próximos Eventos'}
+          </h2>
           {user?.role === 'ADMIN' && (
              <button onClick={() => navigate('/events')} className="text-sm text-[#B7294A] hover:underline">Ver todos</button>
           )}
@@ -137,9 +139,20 @@ const Home: React.FC = () => {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#B7294A]"></div>
           </div>
         ) : upcomingEvents.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-gray-600 gap-4">
+          <div className="flex flex-col items-center justify-center py-12 text-gray-600 gap-3 text-center px-4">
             <Calendar size={48} className="text-gray-300" />
-            <p>Nenhum evento próximo agendado</p>
+            {isAdmin ? (
+              <p>Nenhum evento próximo agendado</p>
+            ) : (
+              <>
+                <p className="font-medium text-gray-700">
+                  Você ainda não está inscrito em nenhum evento
+                </p>
+                <p className="text-sm text-gray-500 max-w-sm">
+                  Assim que a coordenação inscrever você em uma atividade, ela aparece aqui.
+                </p>
+              </>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

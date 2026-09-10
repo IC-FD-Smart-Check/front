@@ -16,7 +16,7 @@ interface BulkStudentPickerProps {
 }
 
 const selectClass =
-  'px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#B7294A] focus:border-transparent bg-white';
+  'w-full min-w-0 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#B7294A] focus:border-transparent bg-white';
 
 const BulkStudentPicker: React.FC<BulkStudentPickerProps> = ({
   subscribedUserIds,
@@ -143,48 +143,71 @@ const BulkStudentPicker: React.FC<BulkStudentPickerProps> = ({
   return (
     <div className="flex flex-col gap-3">
       {/* Filtros */}
-      <div className="flex flex-wrap gap-2 items-center">
-        <Filter size={16} className="text-gray-400 flex-shrink-0" />
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between gap-3">
+          <span className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
+            <Filter size={14} />
+            Filtrar alunos
+          </span>
 
-        <select value={courseId} onChange={(e) => handleCourseChange(e.target.value)} className={selectClass}>
-          <option value="ALL">Todos os cursos</option>
-          {courses.map((course) => (
-            <option key={course.id} value={course.id}>{course.name}</option>
-          ))}
-        </select>
+          {hasFilters && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="text-sm text-gray-500 hover:text-gray-800 underline"
+            >
+              Limpar filtros
+            </button>
+          )}
+        </div>
 
-        <select value={classGroupId} onChange={(e) => setClassGroupId(e.target.value)} className={selectClass}>
-          <option value="ALL">Todas as turmas</option>
-          {availableClassGroups.map((cg) => (
-            <option key={cg.id} value={cg.id}>{cg.name}</option>
-          ))}
-        </select>
+        {/* Colunas iguais: os três selects lado a lado quando há espaço */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <select
+            value={courseId}
+            onChange={(e) => handleCourseChange(e.target.value)}
+            className={selectClass}
+            aria-label="Curso"
+          >
+            <option value="ALL">Todos os cursos</option>
+            {courses.map((course) => (
+              <option key={course.id} value={course.id}>{course.name}</option>
+            ))}
+          </select>
 
-        <select
-          value={semester}
-          onChange={(e) => setSemester(e.target.value as Semester | 'ALL')}
-          className={selectClass}
-        >
-          <option value="ALL">Todos os semestres</option>
-          {availableSemesters.map((s) => (
-            <option key={s} value={s}>{semesterLabel(s)}</option>
-          ))}
-        </select>
+          <select
+            value={classGroupId}
+            onChange={(e) => setClassGroupId(e.target.value)}
+            className={selectClass}
+            aria-label="Turma"
+          >
+            <option value="ALL">Todas as turmas</option>
+            {availableClassGroups.map((cg) => (
+              <option key={cg.id} value={cg.id}>{cg.name}</option>
+            ))}
+          </select>
 
-        {hasFilters && (
-          <button type="button" onClick={clearFilters} className="text-sm text-gray-500 hover:text-gray-800 underline">
-            Limpar
-          </button>
-        )}
+          <select
+            value={semester}
+            onChange={(e) => setSemester(e.target.value as Semester | 'ALL')}
+            className={selectClass}
+            aria-label="Semestre"
+          >
+            <option value="ALL">Todos os semestres</option>
+            {availableSemesters.map((s) => (
+              <option key={s} value={s}>{semesterLabel(s)}</option>
+            ))}
+          </select>
+        </div>
+
+        <input
+          type="text"
+          placeholder="Buscar por nome, RA ou email..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full min-w-0 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#B7294A] focus:border-transparent"
+        />
       </div>
-
-      <input
-        type="text"
-        placeholder="Buscar por nome, RA ou email..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#B7294A] focus:border-transparent"
-      />
 
       {/* Barra de seleção */}
       <div className="flex items-center justify-between gap-3 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
@@ -205,7 +228,7 @@ const BulkStudentPicker: React.FC<BulkStudentPickerProps> = ({
       </div>
 
       {/* Lista */}
-      <div className="border border-gray-200 rounded-lg max-h-72 overflow-y-auto">
+      <div className="border border-gray-200 rounded-lg max-h-[26rem] overflow-y-auto">
         {loading ? (
           <div className="py-10 text-center text-sm text-gray-600">Carregando alunos...</div>
         ) : filtered.length === 0 ? (
