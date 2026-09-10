@@ -231,14 +231,14 @@ const BulkStudentPicker: React.FC<BulkStudentPickerProps> = ({
                       className="w-4 h-4 accent-[#B7294A] flex-shrink-0"
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm text-gray-900 truncate">{student.name}</p>
+                      <p className="text-sm text-gray-900 break-words">{student.name}</p>
                       <p className="text-xs text-gray-500 truncate">
                         {student.ra ? `RA ${student.ra}` : student.email}
                         {student.classGroupName && ` · ${student.classGroupName}`}
                       </p>
                     </div>
                     {already && (
-                      <span className="text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded-full whitespace-nowrap">
+                      <span className="text-[11px] text-green-700 bg-green-100 px-1.5 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
                         inscrito
                       </span>
                     )}
@@ -257,7 +257,11 @@ const BulkStudentPicker: React.FC<BulkStudentPickerProps> = ({
             ? 'Inscrevendo...'
             : submitLabel
             ? `${submitLabel}${selected.size > 0 ? ` (${selected.size})` : ''}`
-            : `Inscrever ${selected.size > 0 ? selected.size : ''} aluno${selected.size !== 1 ? 's' : ''}`}
+            : selected.size === 0
+            ? 'Inscrever alunos'
+            : selected.size === 1
+            ? 'Inscrever 1 aluno'
+            : `Inscrever ${selected.size} alunos`}
         </span>
       </Button>
     </div>

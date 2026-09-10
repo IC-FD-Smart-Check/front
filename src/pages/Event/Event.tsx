@@ -293,10 +293,10 @@ const Event: React.FC = () => {
                 </div>
               </div>
 
-              <div className="px-5 py-4 bg-gray-50/30 border-t border-gray-100 flex items-center justify-between gap-3">
+              <div className="px-5 py-4 bg-gray-50/30 border-t border-gray-100 flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => navigate(`/events/${event.id}/subevents`)}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-[#B7294A]/10 text-[#B7294A] hover:bg-[#B7294A] hover:text-white rounded-lg transition-all text-sm font-semibold shadow-sm hover:shadow-md"
+                  className="flex-1 min-w-[6rem] flex items-center justify-center gap-2 px-3 py-2 bg-[#B7294A]/10 text-[#B7294A] hover:bg-[#B7294A] hover:text-white rounded-lg transition-all text-sm font-semibold shadow-sm hover:shadow-md"
                 >
                   <Layers size={16} />
                   Subeventos
@@ -304,14 +304,14 @@ const Event: React.FC = () => {
 
                 <button
                   onClick={() => setSubscriptionModal({ isOpen: true, event })}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-700 hover:text-white rounded-lg transition-all text-sm font-semibold shadow-sm hover:shadow-md"
+                  className="flex-1 min-w-[6rem] flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 hover:bg-gray-700 hover:text-white rounded-lg transition-all text-sm font-semibold shadow-sm hover:shadow-md"
                   title="Inscrever alunos em todas as atividades deste evento"
                 >
                   <UserPlus size={16} />
                   Inscrever
                 </button>
 
-                <div className="flex items-center gap-1 border-l border-gray-200 pl-3">
+                <div className="flex items-center gap-1 ml-auto">
                   <button
                     onClick={() => handleOpenEditModal(event)}
                     className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all"

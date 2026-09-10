@@ -239,7 +239,7 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
                             className="w-4 h-4 accent-[#B7294A] flex-shrink-0"
                           />
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm text-gray-900 truncate">{sub.userName}</p>
+                            <p className="text-sm text-gray-900 break-words">{sub.userName}</p>
                             <p className="text-xs text-gray-500 truncate">{sub.userEmail || '—'}</p>
                           </div>
                           <button
@@ -262,7 +262,11 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
                 >
                   {bulkRemoving
                     ? 'Removendo...'
-                    : `Remover ${selectedToRemove.size > 0 ? selectedToRemove.size : ''} inscrição${selectedToRemove.size !== 1 ? 'ões' : ''}`}
+                    : selectedToRemove.size === 0
+                    ? 'Remover inscrições'
+                    : selectedToRemove.size === 1
+                    ? 'Remover 1 inscrição'
+                    : `Remover ${selectedToRemove.size} inscrições`}
                 </button>
               </div>
             )}
