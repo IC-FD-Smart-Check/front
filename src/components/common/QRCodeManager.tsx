@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { QRCodeResponse } from '@/types';
 import { qrCodeService } from '@/services';
 import Button from './Button';
+import PageLoader from './PageLoader';
 import QRCode from 'react-qr-code';
 
 interface QRCodeManagerProps {
@@ -166,9 +167,7 @@ const QRCodeManager: React.FC<QRCodeManagerProps> = ({
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-4 sm:py-6">
           {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="text-lg text-gray-600">Carregando...</div>
-            </div>
+            <PageLoader message="Carregando QR codes..." />
           ) : (
             <div className="space-y-6">
               {/* Botão de gerar novo QR Code */}

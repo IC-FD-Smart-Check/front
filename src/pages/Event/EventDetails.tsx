@@ -4,6 +4,7 @@ import { ArrowLeft, Calendar, Clock, MapPin, QrCode, LogIn, LogOut } from 'lucid
 import { eventService, subEventService } from '@/services';
 import type { EventResponse, SubEventResponse } from '@/types';
 import Button from '@/components/common/Button';
+import PageLoader from '@/components/common/PageLoader';
 
 const formatDateTime = (value: string) =>
   new Date(value).toLocaleString('pt-BR', {
@@ -63,12 +64,7 @@ const EventDetails: React.FC = () => {
   }, [eventId]);
 
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 gap-3 text-gray-600">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#B7294A]" />
-        <span className="text-sm">Carregando evento...</span>
-      </div>
-    );
+    return <PageLoader message="Carregando evento..." />;
   }
 
   if (error || !event) {

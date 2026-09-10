@@ -26,8 +26,8 @@ const EventConfirmation: React.FC<EventConfirmationProps> = ({
           </div>
           <p className="text-sm sm:text-base text-white/90">
             {eventInfo.actionType === 'CHECKOUT'
-              ? 'Confirme sua saída da atividade'
-              : 'Confirme sua presença na atividade'}
+              ? 'Confirme sua saída do subevento'
+              : 'Confirme sua presença no subevento'}
           </p>
         </div>
 
@@ -39,7 +39,7 @@ const EventConfirmation: React.FC<EventConfirmationProps> = ({
                 {eventInfo.eventTitle}
               </span>
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">Atividade</p>
+                <p className="text-xs sm:text-sm text-gray-600">Subevento</p>
                 <p className="text-lg sm:text-xl font-bold text-gray-900 leading-snug">
                   {eventInfo.subEventTitle}
                 </p>

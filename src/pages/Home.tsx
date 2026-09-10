@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { Calendar, QrCode, Users, TrendingUp, Clock, MapPin, ChevronRight } from 'lucide-react';
 import { dashboardService, eventService } from '@/services';
+import PageLoader from '@/components/common/PageLoader';
 import type { DashboardStatsResponse, EventResponse } from '@/types';
 
 const Home: React.FC = () => {
@@ -153,9 +154,7 @@ const Home: React.FC = () => {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#B7294A]"></div>
-          </div>
+          <PageLoader compact message="Carregando eventos..." />
         ) : upcomingEvents.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 sm:py-12 text-gray-600 gap-3 text-center px-2 sm:px-4">
             <Calendar size={48} className="text-gray-300" />

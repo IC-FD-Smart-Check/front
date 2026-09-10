@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { SubscriptionResponse } from '@/types';
 import { subscriptionService } from '@/services';
 import BulkStudentPicker from './BulkStudentPicker';
+import PageLoader from './PageLoader';
 
 interface SubscriptionManagerProps {
   isOpen: boolean;
@@ -198,7 +199,7 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
             </div>
 
             {loadingSubscriptions ? (
-              <div className="text-sm text-gray-500 py-8 text-center">Carregando...</div>
+              <PageLoader compact message="Carregando inscrições..." />
             ) : subscriptions.length === 0 ? (
               <div className="text-sm text-gray-500 py-8 text-center border border-dashed border-gray-300 rounded-lg bg-white">
                 Nenhum aluno inscrito ainda.

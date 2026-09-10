@@ -4,6 +4,7 @@ import { classGroupService, courseService, userService } from '@/services';
 import type { ClassGroupResponse, CourseResponse, Semester, UserResponse } from '@/types';
 import { semesterLabel } from '@/utils/semester';
 import Button from './Button';
+import PageLoader from './PageLoader';
 
 interface BulkStudentPickerProps {
   /** IDs já inscritos — exibidos marcados e sem seleção */
@@ -230,7 +231,7 @@ const BulkStudentPicker: React.FC<BulkStudentPickerProps> = ({
       {/* Lista */}
       <div className="border border-gray-200 rounded-lg max-h-[26rem] overflow-y-auto">
         {loading ? (
-          <div className="py-10 text-center text-sm text-gray-600">Carregando alunos...</div>
+          <PageLoader compact message="Carregando alunos..." />
         ) : filtered.length === 0 ? (
           <div className="py-10 text-center text-sm text-gray-500">
             {students.length === 0 ? 'Nenhum aluno cadastrado.' : 'Nenhum aluno com esses filtros.'}

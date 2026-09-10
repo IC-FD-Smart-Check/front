@@ -5,6 +5,7 @@ import type { ClassGroupResponse, UserRequest, UserResponse } from '@/types';
 import { semesterLabel } from '@/utils/semester';
 import Button from '@/components/common/Button';
 import DeleteUserModal from '@/components/common/DeleteUserModal';
+import PageLoader from '@/components/common/PageLoader';
 import UserForm from '@/components/common/UserForm';
 import Toast from '@/components/common/Toast';
 
@@ -237,11 +238,7 @@ const UsersList: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-lg text-gray-600">Carregando usuários...</div>
-      </div>
-    );
+    return <PageLoader message="Carregando usuários..." />;
   }
 
   return (

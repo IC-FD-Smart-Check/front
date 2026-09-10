@@ -6,7 +6,7 @@ import CheckTable from './CheckTable';
 import CheckCards from './CheckCards';
 import type { CheckResponse } from '@/types';
 import { useToast } from '@/hooks/useToast';
-import LoadingOverlay from '@/components/common/LoadingOverlay';
+import PageLoader from '@/components/common/PageLoader';
 import Toast from '@/components/common/Toast';
 
 const AdminCheck: React.FC = () => {
@@ -57,48 +57,54 @@ const AdminCheck: React.FC = () => {
   );
 
   return (
-    <div className="relative space-y-4 sm:space-y-6">
-      <LoadingOverlay isVisible={isLoading} />
+    <div className="space-y-4 sm:space-y-6">
       <Toast
         message={toast.message}
         type={toast.type}
         isVisible={toast.isVisible}
         onClose={hideToast}
       />
-      {/* Stats Cards */}
-      <CheckStats
-        totalEvents={stats.totalCheckins}
-        totalCheckIns={stats.presentCount}
-        totalCheckOuts={stats.checkoutCount}
-        eventsLabel="Registros"
-      />
 
-      {/* Filtros */}
-      <CheckFilters
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        filterEvent={filterEvent}
-        onFilterChange={setFilterEvent}
-        availableEvents={uniqueEvents}
-      />
+      {isLoading ? (
+        <PageLoader message="Carregando check-ins..." />
+      ) : (
+        <>
+          {/* Stats Cards */}
+          <CheckStats
+            totalEvents={stats.totalCheckins}
+            totalCheckIns={stats.presentCount}
+            totalCheckOuts={stats.checkoutCount}
+            eventsLabel="Registros"
+          />
 
-      {/* Tabela de Registros */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-b border-gray-200">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900">
-            Histórico de Check-ins
-          </h3>
-          <p className="text-xs sm:text-sm text-gray-600 mt-1">
-            {filteredRecords.length} registro{filteredRecords.length !== 1 ? 's' : ''}
-          </p>
-        </div>
+          {/* Filtros */}
+          <CheckFilters
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            filterEvent={filterEvent}
+            onFilterChange={setFilterEvent}
+            availableEvents={uniqueEvents}
+          />
 
-        {/* Tabela Desktop */}
-        <CheckTable records={filteredRecords} />
+          {/* Tabela de Registros */}
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-b border-gray-200">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+                Histórico de Check-ins
+              </h3>
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                {filteredRecords.length} registro{filteredRecords.length !== 1 ? 's' : ''}
+              </p>
+            </div>
 
-        {/* Cards Mobile */}
-        <CheckCards records={filteredRecords} />
-      </div>
+            {/* Tabela Desktop */}
+            <CheckTable records={filteredRecords} />
+
+            {/* Cards Mobile */}
+            <CheckCards records={filteredRecords} />
+          </div>
+        </>
+      )}
     </div>
   );
 };

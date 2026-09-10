@@ -14,6 +14,7 @@ import ClassGroupForm from '@/components/common/ClassGroupForm';
 import ClassGroupStudentsModal from '@/components/common/ClassGroupStudentsModal';
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal';
 import CourseForm from '@/components/common/CourseForm';
+import PageLoader from '@/components/common/PageLoader';
 import Toast from '@/components/common/Toast';
 
 type TabKey = 'courses' | 'classGroups';
@@ -217,11 +218,7 @@ const Academic: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-lg text-gray-600">Carregando cursos e turmas...</div>
-      </div>
-    );
+    return <PageLoader message="Carregando cursos e turmas..." />;
   }
 
   const isCoursesTab = activeTab === 'courses';

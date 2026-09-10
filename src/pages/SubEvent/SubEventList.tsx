@@ -6,6 +6,7 @@ import Button from '@/components/common/Button';
 import SubEventForm from '@/components/common/SubEventForm';
 import QRCodeManager from '@/components/common/QRCodeManager';
 import SubscriptionManager from '@/components/common/SubscriptionManager';
+import PageLoader from '@/components/common/PageLoader';
 import Toast from '@/components/common/Toast';
 import { ArrowLeft, Plus } from 'lucide-react';
 
@@ -204,11 +205,7 @@ const SubEventList: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B7294A]"></div>
-      </div>
-    );
+    return <PageLoader message="Carregando subeventos..." />;
   }
 
   if (error || !event) {

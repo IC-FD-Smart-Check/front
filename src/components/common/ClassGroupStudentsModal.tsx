@@ -3,6 +3,7 @@ import { Users } from 'lucide-react';
 import { classGroupService } from '@/services';
 import type { ClassGroupResponse, UserResponse } from '@/types';
 import { semesterLabel } from '@/utils/semester';
+import PageLoader from './PageLoader';
 
 interface ClassGroupStudentsModalProps {
   isOpen: boolean;
@@ -89,7 +90,7 @@ const ClassGroupStudentsModal: React.FC<ClassGroupStudentsModalProps> = ({
         {/* Lista */}
         <div className="flex-1 overflow-y-auto">
           {loading ? (
-            <div className="py-12 text-center text-gray-600">Carregando alunos...</div>
+            <PageLoader message="Carregando alunos..." />
           ) : error ? (
             <div className="m-6 bg-red-50 border-l-4 border-red-500 rounded p-4 text-sm text-red-700">
               {error}
