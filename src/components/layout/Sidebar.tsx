@@ -66,10 +66,14 @@ const Sidebar: React.FC = () => {
           <Menu size={22} />
         </button>
 
-        <Link to="/home" className="flex items-center" aria-label="Ir para a Home">
-          <div className="w-24">
-            <Logo />
-          </div>
+        {/* No celular a logo completa fica alta demais; usa só o nome em texto */}
+        <Link
+          to="/home"
+          aria-label="Ir para a Home"
+          className="text-[#B7294A] font-extrabold text-lg leading-none tracking-tight select-none"
+          style={{ fontFamily: "'Nunito', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" }}
+        >
+          FD SmartCheck
         </Link>
 
         <Link
