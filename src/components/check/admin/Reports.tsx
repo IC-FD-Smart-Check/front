@@ -4,7 +4,7 @@ import { eventService } from '@/services/eventService';
 import { subEventService } from '@/services/subEventService';
 import { checkService } from '@/services/checkService';
 import { userService } from '@/services/userService';
-import { reportService } from '@/services/reportService';
+import { reportService, type ReportTemplate } from '@/services/reportService';
 import { subscriptionService } from '@/services/subscriptionService';
 import type { EventResponse, SubEventResponse } from '@/types';
 import PageLoader from '@/components/common/PageLoader';
@@ -151,6 +151,8 @@ export default function Reports() {
   const [filters, setFilters] = useState<Filters>(emptyFilters);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [photoSubject, setPhotoSubject] = useState<PhotoSubject | null>(null);
+  const [templates, setTemplates] = useState<ReportTemplate[]>([]);
+  const [exportingTemplateId, setExportingTemplateId] = useState<string | null>(null);
 
   useEffect(() => {
     loadEvents();
@@ -362,6 +364,51 @@ export default function Reports() {
 
   const clearFilters = () => setFilters(emptyFilters);
 
+  // A lista de modelos vem do backend; registrar um novo lá o faz aparecer aqui.
+  useEffect(() => {
+    reportService
+      .listTemplates()
+      .then(setTemplates)
+      .catch(() => {
+        // Sem modelos extras a tela continua funcionando com PDF e Excel.
+        setTemplates([]);
+      });
+  }, []);
+
+  /** Baixa o blob com o nome que o servidor mandou no Content-Disposition. */
+  const baixarBlob = (response: { data: BlobPart; headers: Record<string, unknown> }, fallback: string) => {
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const disposition = response.headers['content-disposition'] as string | undefined;
+    const filename = disposition?.match(/filename="?([^";]+)"?/i)?.[1] ?? fallback;
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleExportTemplate = async (template: ReportTemplate) => {
+    if (!selectedSubeventoId) {
+      showToast('Escolha um subevento para usar este modelo', 'error');
+      return;
+    }
+
+    setExportingTemplateId(template.id);
+    try {
+      const response = await reportService.exportSubEventByTemplate(selectedSubeventoId, template.id);
+      baixarBlob(response, `${template.id}.${template.format === 'PDF' ? 'pdf' : 'xlsx'}`);
+      showToast(`${template.name} exportado com sucesso`, 'success');
+    } catch (error) {
+      showToast(`Erro ao exportar ${template.name}`, 'error');
+      console.error(error);
+    } finally {
+      setExportingTemplateId(null);
+    }
+  };
+
   const handleExportPDF = async () => {
     if (!selectedEventId) {
       showToast('Selecione um evento para exportar', 'error');
@@ -559,6 +606,41 @@ export default function Reports() {
                 Excel
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Modelos extras. Vivem por subevento, entao so aparecem quando ha um
+            escolhido — e a mensagem diz o porque em vez de esconder calado. */}
+        {selectedEventId && templates.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-gray-100">
+            <p className="text-xs text-gray-500 mb-2">Outros modelos</p>
+
+            {!selectedSubeventoId ? (
+              <p className="text-xs text-gray-400">
+                Escolha um subevento acima para usar os modelos abaixo.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {templates.map((template) => (
+                  <button
+                    key={template.id}
+                    onClick={() => handleExportTemplate(template)}
+                    disabled={exportingTemplateId !== null}
+                    title={template.description}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-xs font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {exportingTemplateId === template.id ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : template.format === 'PDF' ? (
+                      <FileText size={14} className="text-red-600" />
+                    ) : (
+                      <Sheet size={14} className="text-green-600" />
+                    )}
+                    {template.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
