@@ -1,6 +1,7 @@
 import api from './api';
 import { geoSecurity, GeolocationError } from '@/utils/geoSecurity';
 import type {
+  AttendanceEntry,
   CheckInfoResponse,
   CheckRequest,
   CheckResponse,
@@ -62,6 +63,25 @@ export const checkService = {
   getPhotoUrl: async (checkId: string, type: 'CHECKIN' | 'CHECKOUT'): Promise<string> => {
     const response = await api.get(`/checkin/${checkId}/photo/${type}`, { responseType: 'blob' });
     return URL.createObjectURL(response.data);
+  },
+
+  /**
+   * Inscritos do subevento e a situação de cada um (ADMIN).
+   * Base da tela de marcação manual.
+   */
+  getAttendance: async (subEventId: string): Promise<AttendanceEntry[]> => {
+    const response = await api.get<AttendanceEntry[]>(`/checkin/subevent/${subEventId}/attendance`);
+    return response.data;
+  },
+
+  /** Marca check-in ou checkout na mão (ADMIN). Nunca sobrescreve o que já existe. */
+  markManual: async (
+    subEventId: string,
+    userId: string,
+    type: 'CHECKIN' | 'CHECKOUT',
+  ): Promise<AttendanceEntry> => {
+    const response = await api.post<AttendanceEntry>('/checkin/manual', { subEventId, userId, type });
+    return response.data;
   },
 
   /**

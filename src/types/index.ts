@@ -260,6 +260,26 @@ export interface CheckResponse {
   /** Se existe cada foto gravada, para o professor abrir. */
   hasCheckinPhoto?: boolean;
   hasCheckoutPhoto?: boolean;
+  /** Lançado na mão por um admin, em vez de escaneado pelo aluno. */
+  checkinManual?: boolean;
+  checkoutManual?: boolean;
+}
+
+/** Um inscrito e a situação dele, na tela de marcação manual (ADMIN). */
+export interface AttendanceEntry {
+  userId: string;
+  name: string;
+  email: string | null;
+  ra: string | null;
+  classGroupName: string | null;
+  courseName: string | null;
+  checkinTime: string | null;
+  checkoutTime: string | null;
+  checkinManual: boolean;
+  checkoutManual: boolean;
+  /** O servidor decide o que pode ser marcado; a tela só desenha. */
+  canMarkCheckin: boolean;
+  canMarkCheckout: boolean;
 }
 
 // CHECK INFO (QR CODE VALIDATION)

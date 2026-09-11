@@ -36,6 +36,9 @@ interface Student {
   checkId?: string;
   hasCheckinPhoto?: boolean;
   hasCheckoutPhoto?: boolean;
+  /** Lançado na mão por um admin, em vez de escaneado pelo aluno. */
+  checkinManual?: boolean;
+  checkoutManual?: boolean;
 }
 
 interface SubEventStats {
@@ -293,6 +296,8 @@ export default function Reports() {
           student.checkId = check.id;
           student.hasCheckinPhoto = check.hasCheckinPhoto;
           student.hasCheckoutPhoto = check.hasCheckoutPhoto;
+          student.checkinManual = check.checkinManual;
+          student.checkoutManual = check.checkoutManual;
         });
 
       const processed = [...rows.values()].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
@@ -886,6 +891,11 @@ export default function Reports() {
                           {student.checkinTime ? (
                             <span className="text-green-700 font-medium">
                               {formatDateTime(student.checkinTime)}
+                              {student.checkinManual && (
+                                <span className="block text-[10px] font-normal text-amber-700">
+                                  marcado pelo admin
+                                </span>
+                              )}
                             </span>
                           ) : (
                             <span className="text-gray-400">—</span>
@@ -895,6 +905,11 @@ export default function Reports() {
                           {student.checkoutTime ? (
                             <span className="text-blue-700 font-medium">
                               {formatDateTime(student.checkoutTime)}
+                              {student.checkoutManual && (
+                                <span className="block text-[10px] font-normal text-amber-700">
+                                  marcado pelo admin
+                                </span>
+                              )}
                             </span>
                           ) : (
                             <span className="text-gray-400">—</span>
@@ -968,12 +983,18 @@ export default function Reports() {
                           <p className="text-gray-800 font-medium">
                             {student.checkinTime ? formatDateTime(student.checkinTime) : '—'}
                           </p>
+                          {student.checkinManual && (
+                            <p className="text-[10px] text-amber-700">marcado pelo admin</p>
+                          )}
                         </div>
                         <div className="min-w-0">
                           <p className="text-gray-500">Check-out</p>
                           <p className="text-gray-800 font-medium">
                             {student.checkoutTime ? formatDateTime(student.checkoutTime) : '—'}
                           </p>
+                          {student.checkoutManual && (
+                            <p className="text-[10px] text-amber-700">marcado pelo admin</p>
+                          )}
                         </div>
                       </div>
 

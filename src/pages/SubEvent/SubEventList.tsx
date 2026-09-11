@@ -6,6 +6,7 @@ import Button from '@/components/common/Button';
 import SubEventForm from '@/components/common/SubEventForm';
 import QRCodeManager from '@/components/common/QRCodeManager';
 import SubscriptionManager from '@/components/common/SubscriptionManager';
+import ManualAttendanceManager from '@/components/common/ManualAttendanceManager';
 import PageLoader from '@/components/common/PageLoader';
 import Toast from '@/components/common/Toast';
 import { ArrowLeft, Plus } from 'lucide-react';
@@ -37,6 +38,14 @@ const SubEventList: React.FC = () => {
   });
 
   const [subscriptionModal, setSubscriptionModal] = useState<{
+    isOpen: boolean;
+    subEvent: SubEventResponse | null;
+  }>({
+    isOpen: false,
+    subEvent: null,
+  });
+
+  const [manualModal, setManualModal] = useState<{
     isOpen: boolean;
     subEvent: SubEventResponse | null;
   }>({
@@ -137,6 +146,14 @@ const SubEventList: React.FC = () => {
 
   const handleCloseSubscriptionModal = () => {
     setSubscriptionModal({ isOpen: false, subEvent: null });
+  };
+
+  const handleOpenManualModal = (subEvent: SubEventResponse) => {
+    setManualModal({ isOpen: true, subEvent });
+  };
+
+  const handleCloseManualModal = () => {
+    setManualModal({ isOpen: false, subEvent: null });
   };
 
   const handleFormSubmit = async (data: SubEventRequest) => {
@@ -288,7 +305,7 @@ const SubEventList: React.FC = () => {
                   )}
                 </div>
 
-                {/* No celular os 4 botões viram uma grade 2x2 com área de toque maior */}
+                {/* No celular os botões viram uma grade de 2 colunas, com área de toque maior */}
                 <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 lg:flex-shrink-0">
                   <button
                     onClick={() => handleOpenSubscriptionModal(subEvent)}
@@ -301,6 +318,12 @@ const SubEventList: React.FC = () => {
                     className="px-3 py-2 sm:py-1.5 text-gray-600 hover:bg-gray-800 hover:text-white border border-gray-300 rounded-lg transition-colors text-sm font-medium"
                   >
                     QR Codes
+                  </button>
+                  <button
+                    onClick={() => handleOpenManualModal(subEvent)}
+                    className="px-3 py-2 sm:py-1.5 text-gray-600 hover:bg-gray-800 hover:text-white border border-gray-300 rounded-lg transition-colors text-sm font-medium"
+                  >
+                    Marcações
                   </button>
                   <button
                     onClick={() => handleOpenEditModal(subEvent)}
@@ -429,6 +452,18 @@ const SubEventList: React.FC = () => {
           subEventId={subscriptionModal.subEvent.id}
           subEventTitle={subscriptionModal.subEvent.title}
           onClose={handleCloseSubscriptionModal}
+          onSuccess={(message) => showToast(message, 'success')}
+          onError={(message) => showToast(message, 'error')}
+        />
+      )}
+
+      {/* Modal de marcações manuais */}
+      {manualModal.subEvent && (
+        <ManualAttendanceManager
+          isOpen={manualModal.isOpen}
+          subEventId={manualModal.subEvent.id}
+          subEventTitle={manualModal.subEvent.title}
+          onClose={handleCloseManualModal}
           onSuccess={(message) => showToast(message, 'success')}
           onError={(message) => showToast(message, 'error')}
         />
