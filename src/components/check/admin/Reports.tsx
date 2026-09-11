@@ -8,6 +8,7 @@ import { reportService } from '@/services/reportService';
 import { subscriptionService } from '@/services/subscriptionService';
 import type { EventResponse, SubEventResponse } from '@/types';
 import PageLoader from '@/components/common/PageLoader';
+import CheckPhotoModal, { type PhotoSubject } from './CheckPhotoModal';
 import {
   Users,
   CheckCircle,
@@ -17,6 +18,7 @@ import {
   FileText,
   Sheet,
   Loader2,
+  Camera,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -30,6 +32,10 @@ interface Student {
   /** ISO vindo da API; a formatação acontece só na hora de exibir */
   checkinTime?: string;
   checkoutTime?: string;
+  /** id do registro de check, necessário para abrir as fotos */
+  checkId?: string;
+  hasCheckinPhoto?: boolean;
+  hasCheckoutPhoto?: boolean;
 }
 
 interface SubEventStats {
@@ -144,6 +150,7 @@ export default function Reports() {
 
   const [filters, setFilters] = useState<Filters>(emptyFilters);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [photoSubject, setPhotoSubject] = useState<PhotoSubject | null>(null);
 
   useEffect(() => {
     loadEvents();
@@ -281,6 +288,9 @@ export default function Reports() {
           const student = ensureRow(check.userId, check.userName);
           if (check.checkinTime && !student.checkinTime) student.checkinTime = check.checkinTime;
           if (check.checkoutTime && !student.checkoutTime) student.checkoutTime = check.checkoutTime;
+          student.checkId = check.id;
+          student.hasCheckinPhoto = check.hasCheckinPhoto;
+          student.hasCheckoutPhoto = check.hasCheckoutPhoto;
         });
 
       const processed = [...rows.values()].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
@@ -423,6 +433,23 @@ export default function Reports() {
       setExportingExcel(false);
     }
   };
+
+  // A linha do relatório é agregada; o modal só precisa destes campos.
+  const abrirFotos = (student: Student) => {
+    if (!student.checkId) return;
+    setPhotoSubject({
+      id: student.checkId,
+      userName: student.name,
+      subEventTitle: selectedSubevento?.title || '',
+      checkinTime: student.checkinTime || null,
+      checkoutTime: student.checkoutTime || null,
+      hasCheckinPhoto: student.hasCheckinPhoto,
+      hasCheckoutPhoto: student.hasCheckoutPhoto,
+    });
+  };
+
+  const temFoto = (student: Student) =>
+    Boolean(student.checkId && (student.hasCheckinPhoto || student.hasCheckoutPhoto));
 
   const selectedEvent = events.find((event) => event.id === selectedEventId);
   const selectedSubevento = subeventos.find((sub) => sub.id === selectedSubeventoId);
@@ -743,12 +770,15 @@ export default function Reports() {
                     <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Presença
                     </th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Fotos
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {loadingStudents ? (
                     <tr>
-                      <td colSpan={8}>
+                      <td colSpan={9}>
                         <PageLoader compact message="Carregando dados de presença..." />
                       </td>
                     </tr>
@@ -791,11 +821,23 @@ export default function Reports() {
                         <td className="px-3 py-4 whitespace-nowrap">
                           <PresenceBadge presence={presenceOf(student)} />
                         </td>
+                        <td className="px-3 py-4 whitespace-nowrap">
+                          {temFoto(student) ? (
+                            <button
+                              onClick={() => abrirFotos(student)}
+                              className="inline-flex items-center gap-1.5 text-sm text-[#B7294A] hover:underline"
+                            >
+                              <Camera size={16} /> Ver
+                            </button>
+                          ) : (
+                            <span className="text-gray-400 text-sm">—</span>
+                          )}
+                        </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                      <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
                         {students.length === 0
                           ? 'Nenhum inscrito ou registro de presença'
                           : 'Nenhum aluno encontrado com os filtros aplicados'}
@@ -852,6 +894,15 @@ export default function Reports() {
                           </p>
                         </div>
                       </div>
+
+                      {temFoto(student) && (
+                        <button
+                          onClick={() => abrirFotos(student)}
+                          className="mt-3 w-full py-2 rounded-lg border border-gray-200 text-sm text-[#B7294A] font-medium flex items-center justify-center gap-1.5"
+                        >
+                          <Camera size={14} /> Ver fotos
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -998,6 +1049,10 @@ export default function Reports() {
             })}
           </div>
         </div>
+      )}
+
+      {photoSubject && (
+        <CheckPhotoModal record={photoSubject} onClose={() => setPhotoSubject(null)} />
       )}
     </div>
   );

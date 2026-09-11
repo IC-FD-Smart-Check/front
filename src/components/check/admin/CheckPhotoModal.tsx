@@ -1,10 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { X, ImageOff } from 'lucide-react';
 import { checkService } from '@/services';
-import type { CheckResponse } from '@/types';
+
+/**
+ * Contrato mínimo em vez de CheckResponse inteiro: a tela de relatório monta as
+ * linhas a partir de inscrições e checks agregados, não de um CheckResponse.
+ * Assim os dois formatos usam o mesmo modal sem conversão.
+ */
+export interface PhotoSubject {
+  /** id do check, não do aluno */
+  id: string;
+  userName: string;
+  subEventTitle: string;
+  checkinTime: string | null;
+  checkoutTime: string | null;
+  hasCheckinPhoto?: boolean;
+  hasCheckoutPhoto?: boolean;
+}
 
 interface CheckPhotoModalProps {
-  record: CheckResponse;
+  record: PhotoSubject;
   onClose: () => void;
 }
 
