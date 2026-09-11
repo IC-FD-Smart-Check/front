@@ -5,7 +5,6 @@ interface GeoSignResponse {
   latitude: number;
   longitude: number;
   timestamp: number;
-  deviceId: string;
   signature: string;
 }
 

@@ -231,7 +231,6 @@ export interface GeoPayload {
   latitude: number;
   longitude: number;
   timestamp: number;
-  deviceId: string;
 }
 
 // CHECK-IN REQUEST (NOVA ESTRUTURA)

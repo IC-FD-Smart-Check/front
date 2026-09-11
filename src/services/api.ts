@@ -5,6 +5,11 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // Necessário para o cookie httpOnly de identidade do aparelho, que o backend
+  // emite e lê sozinho. O front e a API estão em origens diferentes
+  // (www. e api.), então sem isto o navegador não anexaria o cookie.
+  // O lado do servidor já permite credenciais (CorsConfig.allowCredentials).
+  withCredentials: true,
 });
 
 // Interceptor para adicionar token

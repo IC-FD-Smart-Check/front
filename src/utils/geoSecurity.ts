@@ -1,11 +1,9 @@
-import { crypto } from './crypto';
 import { geoService } from '@/services/geoService';
 
 export interface GeoPayload {
   latitude: number;
   longitude: number;
   timestamp: number;
-  deviceId: string;
 }
 
 export interface SecureGeoRequest {
@@ -48,7 +46,6 @@ export const geoSecurity = {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
             timestamp: Date.now(),
-            deviceId: crypto.getDeviceId(),
           };
           resolve(payload);
         },
