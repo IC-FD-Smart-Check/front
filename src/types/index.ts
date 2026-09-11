@@ -237,6 +237,7 @@ export interface GeoPayload {
 export interface CheckRequest {
   requestId: string;
   qrCode: string;
+  photoBase64?: string;
   type: 'CHECKIN' | 'CHECKOUT';
   geoPayload: GeoPayload;
   signature: string;
@@ -256,6 +257,9 @@ export interface CheckResponse {
   checkoutTime: string | null;
   createdAt: string;
   message: string;
+  /** Se existe cada foto gravada, para o professor abrir. */
+  hasCheckinPhoto?: boolean;
+  hasCheckoutPhoto?: boolean;
 }
 
 // CHECK INFO (QR CODE VALIDATION)

@@ -1,12 +1,15 @@
-import React from 'react';
-import { Calendar, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Calendar, Clock, Camera } from 'lucide-react';
 import type { CheckResponse } from '@/types';
+import CheckPhotoModal from './CheckPhotoModal';
 
 interface CheckTableProps {
   records: CheckResponse[];
 }
 
 const CheckTable: React.FC<CheckTableProps> = ({ records }) => {
+  const [photoRecord, setPhotoRecord] = useState<CheckResponse | null>(null);
+
   return (
     <div className="hidden md:block overflow-x-auto">
       <table className="w-full">
@@ -24,6 +27,9 @@ const CheckTable: React.FC<CheckTableProps> = ({ records }) => {
             </th>
             <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
               Check-out
+            </th>
+            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+              Foto
             </th>
           </tr>
         </thead>
@@ -90,17 +96,35 @@ const CheckTable: React.FC<CheckTableProps> = ({ records }) => {
                     <span className="text-gray-400 text-sm">Pendente</span>
                   )}
                 </td>
+
+                {/* Foto */}
+                <td className="px-6 py-4">
+                  {(record.hasCheckinPhoto || record.hasCheckoutPhoto) ? (
+                    <button
+                      onClick={() => setPhotoRecord(record)}
+                      className="inline-flex items-center gap-1.5 text-sm text-[#B7294A] hover:underline"
+                    >
+                      <Camera size={16} /> Ver
+                    </button>
+                  ) : (
+                    <span className="text-gray-400 text-sm">-</span>
+                  )}
+                </td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan={5} className="px-6 py-12 text-center">
+              <td colSpan={6} className="px-6 py-12 text-center">
                 <p className="text-gray-500">Nenhum registro encontrado</p>
               </td>
             </tr>
           )}
         </tbody>
       </table>
+
+      {photoRecord && (
+        <CheckPhotoModal record={photoRecord} onClose={() => setPhotoRecord(null)} />
+      )}
     </div>
   );
 };

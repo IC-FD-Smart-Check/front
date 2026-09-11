@@ -1,12 +1,15 @@
-import React from 'react';
-import { Calendar, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Calendar, Clock, Camera } from 'lucide-react';
 import type { CheckResponse } from '@/types';
+import CheckPhotoModal from './CheckPhotoModal';
 
 interface CheckCardsProps {
   records: CheckResponse[];
 }
 
 const CheckCards: React.FC<CheckCardsProps> = ({ records }) => {
+  const [photoRecord, setPhotoRecord] = useState<CheckResponse | null>(null);
+
   return (
     <div className="md:hidden divide-y divide-gray-200">
       {records.length > 0 ? (
@@ -111,12 +114,25 @@ const CheckCards: React.FC<CheckCardsProps> = ({ records }) => {
                 </div>
               </div>
             </div>
+
+            {(record.hasCheckinPhoto || record.hasCheckoutPhoto) && (
+              <button
+                onClick={() => setPhotoRecord(record)}
+                className="mt-3 w-full py-2 rounded-lg border border-gray-200 text-sm text-[#B7294A] font-medium flex items-center justify-center gap-1.5"
+              >
+                <Camera size={14} /> Ver fotos
+              </button>
+            )}
           </div>
         ))
       ) : (
         <div className="px-6 py-12 text-center">
           <p className="text-gray-500">Nenhum registro encontrado</p>
         </div>
+      )}
+
+      {photoRecord && (
+        <CheckPhotoModal record={photoRecord} onClose={() => setPhotoRecord(null)} />
       )}
     </div>
   );

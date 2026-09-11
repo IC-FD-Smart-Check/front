@@ -20,7 +20,11 @@ export const checkService = {
   /**
    * Realiza check-in ou checkout com geolocalização segura
    */
-  performCheck: async (qrCode: string, type: 'CHECKIN' | 'CHECKOUT'): Promise<CheckResponse> => {
+  performCheck: async (
+    qrCode: string,
+    type: 'CHECKIN' | 'CHECKOUT',
+    photoBase64?: string,
+  ): Promise<CheckResponse> => {
     try {
       // 1. Capturar geolocalização segura
       const { geoPayload, signature } = await geoSecurity.createSecureRequest();
@@ -32,6 +36,8 @@ export const checkService = {
         type,
         geoPayload,
         signature,
+        // Obrigatória nos dois fluxos.
+        photoBase64,
       };
 
       // 3. Enviar ao backend
@@ -43,6 +49,19 @@ export const checkService = {
       }
       throw error;
     }
+  },
+
+  /**
+   * Baixa a foto de um check-in (ADMIN) e devolve uma object URL.
+   *
+   * Não dá para apontar um <img src> direto para o endpoint: ele exige o
+   * cabeçalho Authorization, que o navegador não manda em carregamento de
+   * imagem. Por isso o blob passa pelo axios e vira URL local.
+   * Quem chama é responsável por revogar a URL (URL.revokeObjectURL).
+   */
+  getPhotoUrl: async (checkId: string, type: 'CHECKIN' | 'CHECKOUT'): Promise<string> => {
+    const response = await api.get(`/checkin/${checkId}/photo/${type}`, { responseType: 'blob' });
+    return URL.createObjectURL(response.data);
   },
 
   /**

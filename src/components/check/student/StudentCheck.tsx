@@ -7,13 +7,14 @@ import QRScanner from './QRScanner';
 import EventConfirmation from './EventConfirmation';
 import CheckHistory from './CheckHistory';
 import CheckinInitial from './CheckinInitial';
+import SelfieCapture from './SelfieCapture';
 import type { CheckResponse, CheckInfoResponse } from '@/types';
 
 interface StudentCheckProps {
   onCheckComplete?: (eventInfo: CheckInfoResponse, isCheckOut: boolean) => void;
 }
 
-type ViewState = 'initial' | 'scanner' | 'confirmation';
+type ViewState = 'initial' | 'scanner' | 'confirmation' | 'photo';
 
 const StudentCheck: React.FC<StudentCheckProps> = ({ onCheckComplete }) => {
   const [activeTab, setActiveTab] = useState<'checkin' | 'history'>('checkin');
@@ -73,14 +74,21 @@ const StudentCheck: React.FC<StudentCheckProps> = ({ onCheckComplete }) => {
     }
   };
 
-  const handlePerformCheck = async () => {
+  // Check-in e checkout exigem foto tirada na hora.
+  const handleConfirm = () => {
+    if (!eventInfo) return;
+    setView('photo');
+  };
+
+  const handlePerformCheck = async (photoBase64?: string) => {
     if (!eventInfo || !scannedQRCode) return;
 
     setIsProcessing(true);
     try {
       const result = await checkService.performCheck(
         scannedQRCode,
-        eventInfo.actionType as 'CHECKIN' | 'CHECKOUT'
+        eventInfo.actionType as 'CHECKIN' | 'CHECKOUT',
+        photoBase64
       );
 
       showToast(result.message, 'success');
@@ -142,8 +150,20 @@ const StudentCheck: React.FC<StudentCheckProps> = ({ onCheckComplete }) => {
           {view === 'confirmation' && eventInfo && (
             <EventConfirmation
               eventInfo={eventInfo}
-              onConfirm={handlePerformCheck}
+              onConfirm={handleConfirm}
               onCancel={resetState}
+              isProcessing={isProcessing}
+            />
+          )}
+
+          {view === 'photo' && eventInfo && (
+            <SelfieCapture
+              isCheckout={eventInfo.actionType === 'CHECKOUT'}
+              onCapture={handlePerformCheck}
+              // Voltar para a confirmação, e não para o início: o QR já foi
+              // lido e obrigar a escanear de novo seria punir quem desistiu
+              // da foto por um segundo.
+              onCancel={() => setView('confirmation')}
               isProcessing={isProcessing}
             />
           )}
