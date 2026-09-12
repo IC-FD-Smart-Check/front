@@ -37,7 +37,7 @@ const Sidebar: React.FC = () => {
 
   const menuItems = [
     { path: '/home', label: 'Home', icon: Home, roles: ['STUDENT', 'ADMIN'] },
-    { path: '/events', label: 'Eventos', icon: Calendar, roles: ['ADMIN'] },
+    { path: '/events', label: 'Eventos', icon: Calendar, roles: ['STUDENT', 'ADMIN'] },
     { path: '/check', label: 'Check-in', icon: QrCode, roles: ['STUDENT', 'ADMIN'] },
     { path: '/reports', label: 'Relatórios', icon: BarChart, roles: ['ADMIN'] },
     { path: '/academic', label: 'Cursos e Turmas', icon: GraduationCap, roles: ['ADMIN'] },

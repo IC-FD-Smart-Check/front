@@ -83,11 +83,12 @@ export const routesConfig: RouteConfig[] = [
     roles: ['STUDENT', 'ADMIN'],
   },
   {
+    // Aluno e admin usam a mesma tela; o servico recorta o que cada um ve.
     path: '/events',
     component: Event,
     isPrivate: true,
     layout: true,
-    roles: ['ADMIN'],
+    roles: ['STUDENT', 'ADMIN'],
   },
   {
     path: '/events/:eventId',

@@ -148,9 +148,12 @@ const Home: React.FC = () => {
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
             {isAdmin ? 'Próximos Eventos' : 'Meus Próximos Eventos'}
           </h2>
-          {isAdmin && (
-             <button onClick={() => navigate('/events')} className="text-sm text-[#B7294A] hover:underline whitespace-nowrap">Ver todos</button>
-          )}
+          <button
+            onClick={() => navigate('/events')}
+            className="text-sm text-[#B7294A] hover:underline whitespace-nowrap"
+          >
+            Ver todos
+          </button>
         </div>
 
         {loading ? (
