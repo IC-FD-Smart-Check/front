@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Mail, CheckCircle2, LogOut } from 'lucide-react';
 import Button from '@/components/common/Button';
@@ -21,6 +21,13 @@ const FirstAccess: React.FC = () => {
 
   const precisaSenha = !!user?.mustChangePassword;
   const precisaEmail = !user?.email;
+
+  // O `user` do storage pode ser de antes do deploy e não trazer a pendência
+  // real. /me é liberado durante o primeiro acesso, então vale a fonte oficial.
+  useEffect(() => {
+    profileService.getProfile().then(updateUser).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [senhaAtual, setSenhaAtual] = useState('');
   const [senhaNova, setSenhaNova] = useState('');
