@@ -8,7 +8,7 @@ import { reportService, type ReportTemplate } from '@/services/reportService';
 import { subscriptionService } from '@/services/subscriptionService';
 import type { EventResponse, SubEventResponse } from '@/types';
 import PageLoader from '@/components/common/PageLoader';
-import CheckPhotoModal, { type PhotoSubject } from './CheckPhotoModal';
+import AttendanceDetailsModal, { type AttendanceDetailsSubject } from './AttendanceDetailsModal';
 import {
   Users,
   CheckCircle,
@@ -18,7 +18,7 @@ import {
   FileText,
   Sheet,
   Loader2,
-  Camera,
+  Eye,
   ArrowLeft,
   type LucideIcon,
 } from 'lucide-react';
@@ -157,7 +157,7 @@ export default function Reports() {
 
   const [filters, setFilters] = useState<Filters>(emptyFilters);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [photoSubject, setPhotoSubject] = useState<PhotoSubject | null>(null);
+  const [detalhes, setDetalhes] = useState<AttendanceDetailsSubject | null>(null);
   const [templates, setTemplates] = useState<ReportTemplate[]>([]);
   const [exportingTemplateId, setExportingTemplateId] = useState<string | null>(null);
 
@@ -503,22 +503,29 @@ export default function Reports() {
     }
   };
 
-  // A linha do relatório é agregada; o modal só precisa destes campos.
-  const abrirFotos = (student: Student) => {
-    if (!student.checkId) return;
-    setPhotoSubject({
-      id: student.checkId,
-      userName: student.name,
-      subEventTitle: selectedSubevento?.title || '',
-      checkinTime: student.checkinTime || null,
-      checkoutTime: student.checkoutTime || null,
+  // A tabela mostra o essencial; todo o resto é detalhe de apuração e vive no
+  // modal. Abre para qualquer aluno, inclusive o ausente — saber que não há
+  // registro nenhum também é informação.
+  const abrirDetalhes = (student: Student) => {
+    setDetalhes({
+      name: student.name,
+      email: student.email,
+      ra: student.ra,
+      classGroupName: student.classGroupName,
+      courseName: student.courseName,
+      subEventTitle: selectedSubevento?.title,
+      presence: presenceOf(student),
+      checkId: student.checkId,
+      checkinTime: student.checkinTime,
+      checkoutTime: student.checkoutTime,
+      checkinManual: student.checkinManual,
+      checkoutManual: student.checkoutManual,
+      checkinIp: student.checkinIp,
+      checkoutIp: student.checkoutIp,
       hasCheckinPhoto: student.hasCheckinPhoto,
       hasCheckoutPhoto: student.hasCheckoutPhoto,
     });
   };
-
-  const temFoto = (student: Student) =>
-    Boolean(student.checkId && (student.hasCheckinPhoto || student.hasCheckoutPhoto));
 
   const selectedEvent = events.find((event) => event.id === selectedEventId);
   const selectedSubevento = subeventos.find((sub) => sub.id === selectedSubeventoId);
@@ -857,23 +864,17 @@ export default function Reports() {
 
             {/* Tabela — tablet/desktop */}
             <div className="hidden md:block overflow-x-auto">
-              <table className="w-full min-w-[900px]">
+              <table className="w-full min-w-[720px]">
                 <thead className="bg-gray-50 border-b-2 border-gray-200">
                   <tr>
                     <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Nome
                     </th>
                     <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       RA
                     </th>
                     <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Turma
-                    </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Curso
                     </th>
                     <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Check-in
@@ -884,15 +885,15 @@ export default function Reports() {
                     <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Presença
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Fotos
+                    <th className="px-3 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Detalhes
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {loadingStudents ? (
                     <tr>
-                      <td colSpan={9}>
+                      <td colSpan={7}>
                         <PageLoader compact message="Carregando dados de presença..." />
                       </td>
                     </tr>
@@ -902,32 +903,16 @@ export default function Reports() {
                         <td className="px-3 py-4 text-sm font-medium text-gray-900">
                           {student.name}
                         </td>
-                        <td className="px-3 py-4 text-sm text-gray-600">
-                          {student.email || <span className="text-gray-400">—</span>}
-                        </td>
                         <td className="px-3 py-4 text-sm text-gray-600 whitespace-nowrap">
                           {student.ra || <span className="text-gray-400">—</span>}
                         </td>
                         <td className="px-3 py-4 text-sm text-gray-600">
                           {student.classGroupName || <span className="text-gray-400">—</span>}
                         </td>
-                        <td className="px-3 py-4 text-sm text-gray-600">
-                          {student.courseName || <span className="text-gray-400">—</span>}
-                        </td>
                         <td className="px-3 py-4 text-sm whitespace-nowrap">
                           {student.checkinTime ? (
                             <span className="text-green-700 font-medium">
                               {formatDateTime(student.checkinTime)}
-                              {student.checkinManual && (
-                                <span className="block text-[10px] font-normal text-amber-700">
-                                  marcado pelo admin
-                                </span>
-                              )}
-                              {student.checkinIp && (
-                                <span className="block text-[10px] font-normal text-gray-400 font-mono">
-                                  {student.checkinIp}
-                                </span>
-                              )}
                             </span>
                           ) : (
                             <span className="text-gray-400">—</span>
@@ -937,16 +922,6 @@ export default function Reports() {
                           {student.checkoutTime ? (
                             <span className="text-blue-700 font-medium">
                               {formatDateTime(student.checkoutTime)}
-                              {student.checkoutManual && (
-                                <span className="block text-[10px] font-normal text-amber-700">
-                                  marcado pelo admin
-                                </span>
-                              )}
-                              {student.checkoutIp && (
-                                <span className="block text-[10px] font-normal text-gray-400 font-mono">
-                                  {student.checkoutIp}
-                                </span>
-                              )}
                             </span>
                           ) : (
                             <span className="text-gray-400">—</span>
@@ -955,23 +930,19 @@ export default function Reports() {
                         <td className="px-3 py-4 whitespace-nowrap">
                           <PresenceBadge presence={presenceOf(student)} />
                         </td>
-                        <td className="px-3 py-4 whitespace-nowrap">
-                          {temFoto(student) ? (
-                            <button
-                              onClick={() => abrirFotos(student)}
-                              className="inline-flex items-center gap-1.5 text-sm text-[#B7294A] hover:underline"
-                            >
-                              <Camera size={16} /> Ver
-                            </button>
-                          ) : (
-                            <span className="text-gray-400 text-sm">—</span>
-                          )}
+                        <td className="px-3 py-4 whitespace-nowrap text-right">
+                          <button
+                            onClick={() => abrirDetalhes(student)}
+                            className="inline-flex items-center gap-1.5 text-sm text-[#B7294A] hover:underline"
+                          >
+                            <Eye size={16} /> Detalhes
+                          </button>
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
+                      <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                         {students.length === 0
                           ? 'Nenhum inscrito ou registro de presença'
                           : 'Nenhum aluno encontrado com os filtros aplicados'}
@@ -995,9 +966,6 @@ export default function Reports() {
                           <p className="text-sm font-semibold text-gray-900 break-words">
                             {index + 1}. {student.name}
                           </p>
-                          {student.email && (
-                            <p className="text-xs text-gray-600 break-all">{student.email}</p>
-                          )}
                           <p className="text-xs text-gray-500 mt-0.5">
                             {student.ra ? `RA ${student.ra}` : 'sem RA'}
                           </p>
@@ -1005,12 +973,9 @@ export default function Reports() {
                         <PresenceBadge presence={presenceOf(student)} />
                       </div>
 
-                      {(student.classGroupName || student.courseName) && (
+                      {student.classGroupName && (
                         <p className="mt-2 text-xs text-gray-600 break-words">
-                          {student.classGroupName || '—'}
-                          {student.courseName && (
-                            <span className="text-gray-500"> · {student.courseName}</span>
-                          )}
+                          {student.classGroupName}
                         </p>
                       )}
 
@@ -1020,35 +985,21 @@ export default function Reports() {
                           <p className="text-gray-800 font-medium">
                             {student.checkinTime ? formatDateTime(student.checkinTime) : '—'}
                           </p>
-                          {student.checkinManual && (
-                            <p className="text-[10px] text-amber-700">marcado pelo admin</p>
-                          )}
-                          {student.checkinIp && (
-                            <p className="text-[10px] text-gray-400 font-mono">{student.checkinIp}</p>
-                          )}
                         </div>
                         <div className="min-w-0">
                           <p className="text-gray-500">Check-out</p>
                           <p className="text-gray-800 font-medium">
                             {student.checkoutTime ? formatDateTime(student.checkoutTime) : '—'}
                           </p>
-                          {student.checkoutManual && (
-                            <p className="text-[10px] text-amber-700">marcado pelo admin</p>
-                          )}
-                          {student.checkoutIp && (
-                            <p className="text-[10px] text-gray-400 font-mono">{student.checkoutIp}</p>
-                          )}
                         </div>
                       </div>
 
-                      {temFoto(student) && (
-                        <button
-                          onClick={() => abrirFotos(student)}
-                          className="mt-3 w-full py-2 rounded-lg border border-gray-200 text-sm text-[#B7294A] font-medium flex items-center justify-center gap-1.5"
-                        >
-                          <Camera size={14} /> Ver fotos
-                        </button>
-                      )}
+                      <button
+                        onClick={() => abrirDetalhes(student)}
+                        className="mt-3 w-full py-2 rounded-lg border border-gray-200 text-sm text-[#B7294A] font-medium flex items-center justify-center gap-1.5"
+                      >
+                        <Eye size={14} /> Ver detalhes
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -1209,8 +1160,8 @@ export default function Reports() {
         </div>
       )}
 
-      {photoSubject && (
-        <CheckPhotoModal record={photoSubject} onClose={() => setPhotoSubject(null)} />
+      {detalhes && (
+        <AttendanceDetailsModal subject={detalhes} onClose={() => setDetalhes(null)} />
       )}
     </div>
   );
