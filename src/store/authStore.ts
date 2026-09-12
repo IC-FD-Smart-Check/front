@@ -24,13 +24,16 @@ const loadUserFromStorage = (): User | null => {
 
 export const useAuthStore = create<AuthState>()((set) => ({
   user: loadUserFromStorage(),
-  token: localStorage.getItem('token'),
-  isAuthenticated: !!localStorage.getItem('token'),
+  // O JWT vive num cookie httpOnly — inacessivel ao JS. A presenca do 'user'
+  // no storage passa a ser o sinal de sessao ativa; o backend derruba com 401.
+  token: null,
+  isAuthenticated: !!loadUserFromStorage(),
 
-  setAuth: (user: User, token: string) => {
-    localStorage.setItem('token', token);
+  // `token` continua no corpo do login por compatibilidade de API, mas o front
+  // nao o guarda: quem autentica a requisicao e o cookie httpOnly.
+  setAuth: (user: User, _token: string) => {
     localStorage.setItem('user', JSON.stringify(user));
-    set({ user, token, isAuthenticated: true });
+    set({ user, token: null, isAuthenticated: true });
   },
 
   updateUser: (user: User) => {

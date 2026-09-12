@@ -12,14 +12,10 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Interceptor para adicionar token
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+// O JWT viaja num cookie httpOnly emitido pelo backend, fora do alcance do
+// JavaScript. Como front e API estao no mesmo dominio registravel
+// (www. e api.fdsmartcheck.com.br), o withCredentials acima ja anexa o cookie
+// em toda requisicao — nao existe mais token no localStorage para injetar.
 
 /**
  * O 428 vem do servidor, mas a rota protegida decide pelo `user` guardado no
@@ -65,9 +61,11 @@ api.interceptors.response.use(
       // Só redireciona se não estiver numa página pública de autenticação
       const currentPath = window.location.pathname;
       const isAuthPage = ['/login', '/forgot-password', '/reset-password'].includes(currentPath);
-      
-      localStorage.removeItem('token');
-      
+
+      // Sem token no storage — o cookie httpOnly some via logout/expiracao.
+      // Zera o 'user', que e o que decide isAuthenticated no front.
+      localStorage.removeItem('user');
+
       if (!isAuthPage) {
         window.location.href = '/login';
       }

@@ -10,22 +10,22 @@ import type {
 
 class AuthService {
   private readonly STORAGE_KEYS = {
-    TOKEN: 'token',
     USER: 'user',
   };
 
   /**
-   * Realiza o login do usuário
+   * Realiza o login do usuário.
+   * O backend responde com um cookie httpOnly (Set-Cookie) que carrega o JWT;
+   * aqui so guardamos o `user` para a UI/rotas. O `token` do corpo e ignorado.
    */
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
       const response = await api.post<LoginResponse>('/auth/login', credentials);
-      
+
       if (response.data) {
-        this.setTokens(response.data.token);
         this.setUser(response.data.user);
       }
-      
+
       return response.data;
     } catch (error: any) {
       throw new Error(
@@ -79,19 +79,12 @@ class AuthService {
   }
 
   /**
-   * Verifica se o usuário está autenticado
+   * Verifica se o usuário está autenticado.
+   * O token vive num cookie httpOnly inacessível ao JS, então a sessão é
+   * inferida pela presença do `user`; requisições sem cookie válido tomam 401.
    */
   isAuthenticated(): boolean {
-    const token = this.getToken();
-    const user = this.getUser();
-    return !!(token && user);
-  }
-
-  /**
-   * Obtém o token atual
-   */
-  getToken(): string | null {
-    return localStorage.getItem(this.STORAGE_KEYS.TOKEN);
+    return !!this.getUser();
   }
 
   /**
@@ -175,10 +168,6 @@ class AuthService {
   }
 
   // Métodos privados para gerenciar localStorage
-  private setTokens(token: string): void {
-    localStorage.setItem(this.STORAGE_KEYS.TOKEN, token);
-  }
-
   private setUser(user: User): void {
     localStorage.setItem(this.STORAGE_KEYS.USER, JSON.stringify(user));
   }
