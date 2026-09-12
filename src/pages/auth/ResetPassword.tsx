@@ -8,6 +8,24 @@ import { authService } from '@/services';
 
 type Estado = 'validando' | 'invalido' | 'pronto' | 'enviando' | 'concluido';
 
+/**
+ * Moldura da página. Fica FORA do componente de propósito: definida dentro,
+ * seria um tipo novo a cada render, o React remontaria a árvore inteira a
+ * cada tecla e o input perderia o foco.
+ */
+const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-300 p-4 sm:p-5">
+    <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-10 w-full max-w-md">
+      <div className="flex justify-center items-center mb-4">
+        <div className="w-36 sm:w-48">
+          <Logo />
+        </div>
+      </div>
+      {children}
+    </div>
+  </div>
+);
+
 /** Destino do link enviado por e-mail: ?token=... */
 const ResetPassword: React.FC = () => {
   const [params] = useSearchParams();
@@ -50,19 +68,6 @@ const ResetPassword: React.FC = () => {
       setEstado('pronto');
     }
   };
-
-  const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-300 p-4 sm:p-5">
-      <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-10 w-full max-w-md">
-        <div className="flex justify-center items-center mb-4">
-          <div className="w-36 sm:w-48">
-            <Logo />
-          </div>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
 
   if (estado === 'validando') {
     return (

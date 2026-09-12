@@ -8,6 +8,31 @@ import { useAuth } from '@/hooks';
 import type { ForgotPasswordResponse } from '@/types';
 
 /**
+ * Moldura da página. Fica FORA do componente de propósito: definida dentro,
+ * seria um tipo novo a cada render, o React remontaria a árvore inteira a
+ * cada tecla e o input perderia o foco.
+ */
+const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-300 p-4 sm:p-5">
+    <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-10 w-full max-w-md">
+      <div className="flex justify-center items-center mb-4">
+        <div className="w-36 sm:w-48">
+          <Logo />
+        </div>
+      </div>
+      {children}
+      <Link
+        to="/login"
+        className="flex items-center justify-center gap-2 text-gray-600 text-sm font-medium mt-6 hover:text-primary transition-colors"
+      >
+        <ArrowLeft size={20} />
+        Voltar para login
+      </Link>
+    </div>
+  </div>
+);
+
+/**
  * Recuperação de senha por e-mail ou RA.
  *
  * A resposta do servidor diz o que aconteceu e a tela orienta de acordo.
@@ -31,26 +56,6 @@ const ForgotPassword: React.FC = () => {
     const response = await forgotPassword({ identifier: value });
     if (response) setResult(response);
   };
-
-  const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-300 p-4 sm:p-5">
-      <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-10 w-full max-w-md">
-        <div className="flex justify-center items-center mb-4">
-          <div className="w-36 sm:w-48">
-            <Logo />
-          </div>
-        </div>
-        {children}
-        <Link
-          to="/login"
-          className="flex items-center justify-center gap-2 text-gray-600 text-sm font-medium mt-6 hover:text-primary transition-colors"
-        >
-          <ArrowLeft size={20} />
-          Voltar para login
-        </Link>
-      </div>
-    </div>
-  );
 
   if (result) {
     const conteudo = {
