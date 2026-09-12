@@ -29,9 +29,8 @@ export interface ForgotPasswordRequest {
   identifier: string;
 }
 
+/** Sempre a mesma resposta, exista ou não a conta: evita enumeração. */
 export interface ForgotPasswordResponse {
-  status: 'SENT' | 'NO_EMAIL_ON_ACCOUNT' | 'NOT_FOUND';
-  maskedEmail?: string;
   message: string;
 }
 

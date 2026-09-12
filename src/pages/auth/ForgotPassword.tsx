@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, MailCheck, UserX, ShieldAlert, KeyRound } from 'lucide-react';
+import { ArrowLeft, MailCheck, KeyRound } from 'lucide-react';
 import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
 import Logo from '@/components/common/Logo';
@@ -35,9 +35,8 @@ const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 /**
  * Recuperação de senha por e-mail ou RA.
  *
- * A resposta do servidor diz o que aconteceu e a tela orienta de acordo.
- * Quando é e-mail, a mensagem é a mesma exista a conta ou não — quem descobre
- * é o dono da caixa de entrada, que recebe ou o link ou um aviso.
+ * A resposta do servidor é sempre a mesma, exista ou não a conta: a tela
+ * nunca confirma nem nega um cadastro.
  */
 const ForgotPassword: React.FC = () => {
   const { forgotPassword, loading, error, clearError } = useAuth();
@@ -58,46 +57,18 @@ const ForgotPassword: React.FC = () => {
   };
 
   if (result) {
-    const conteudo = {
-      SENT: {
-        icone: <MailCheck size={28} className="text-green-600" />,
-        titulo: 'Verifique seu e-mail',
-        texto: result.message,
-        rodape: 'O link vale por 30 minutos. Se não chegar, confira o spam ou peça de novo.',
-      },
-      NO_EMAIL_ON_ACCOUNT: {
-        icone: <ShieldAlert size={28} className="text-amber-600" />,
-        titulo: 'Conta sem e-mail',
-        texto: result.message,
-        rodape: 'A coordenação pode gerar uma senha provisória para você.',
-      },
-      NOT_FOUND: {
-        icone: <UserX size={28} className="text-red-600" />,
-        titulo: 'RA não encontrado',
-        texto: result.message,
-        rodape: null,
-      },
-    }[result.status];
-
     return (
       <Shell>
         <div className="text-center">
           <div className="mx-auto w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center mb-3">
-            {conteudo.icone}
+            <MailCheck size={28} className="text-green-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">{conteudo.titulo}</h2>
-          <p className="text-sm text-gray-600">{conteudo.texto}</p>
-          {conteudo.rodape && <p className="text-xs text-gray-500 mt-3">{conteudo.rodape}</p>}
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Verifique seu e-mail</h2>
+          <p className="text-sm text-gray-600">{result.message}</p>
+          <p className="text-xs text-gray-500 mt-3">
+            O link vale por 30 minutos. Se sua conta não tem e-mail cadastrado, procure a coordenação.
+          </p>
         </div>
-        {result.status !== 'SENT' && (
-          <button
-            type="button"
-            onClick={() => setResult(null)}
-            className="w-full mt-5 text-sm text-[#B7294A] font-medium hover:underline"
-          >
-            Tentar com outro e-mail ou RA
-          </button>
-        )}
       </Shell>
     );
   }
