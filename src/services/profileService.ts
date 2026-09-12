@@ -8,9 +8,14 @@ export const profileService = {
     return response.data;
   },
 
-  // PATCH - O próprio usuário troca sua senha
+  // PATCH - O próprio usuário troca sua senha.
+  // A troca derruba os tokens antigos — inclusive o atual. O backend devolve um
+  // novo, que substitui o guardado para o usuário não ser deslogado.
   updatePassword: async (currentPassword: string, newPassword: string): Promise<void> => {
-    await api.patch('/me/password', { currentPassword, newPassword });
+    const response = await api.patch<{ token: string }>('/me/password', { currentPassword, newPassword });
+    if (response.data?.token) {
+      localStorage.setItem('token', response.data.token);
+    }
   },
 
   // PATCH - O próprio usuário cadastra ou troca seu email

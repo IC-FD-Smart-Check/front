@@ -5,11 +5,8 @@ interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
-  /** Dispensa do aviso de email — vale só para a sessão atual, não é persistida */
-  emailPromptDismissed: boolean;
   setAuth: (user: User, token: string) => void;
   updateUser: (user: User) => void;
-  dismissEmailPrompt: () => void;
   logout: () => Promise<void>;
 }
 
@@ -29,12 +26,11 @@ export const useAuthStore = create<AuthState>()((set) => ({
   user: loadUserFromStorage(),
   token: localStorage.getItem('token'),
   isAuthenticated: !!localStorage.getItem('token'),
-  emailPromptDismissed: false,
 
   setAuth: (user: User, token: string) => {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
-    set({ user, token, isAuthenticated: true, emailPromptDismissed: false });
+    set({ user, token, isAuthenticated: true });
   },
 
   updateUser: (user: User) => {
@@ -42,8 +38,6 @@ export const useAuthStore = create<AuthState>()((set) => ({
     set({ user });
   },
 
-  dismissEmailPrompt: () => set({ emailPromptDismissed: true }),
-  
   logout: async () => {
     try {
       await import('../services/authService').then(m => m.authService.logout());
@@ -52,6 +46,6 @@ export const useAuthStore = create<AuthState>()((set) => ({
     }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    set({ user: null, token: null, isAuthenticated: false, emailPromptDismissed: false });
+    set({ user: null, token: null, isAuthenticated: false });
   },
 }));

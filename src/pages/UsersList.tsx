@@ -5,6 +5,7 @@ import type { ClassGroupResponse, UserRequest, UserResponse } from '@/types';
 import { semesterLabel } from '@/utils/semester';
 import Button from '@/components/common/Button';
 import DeleteUserModal from '@/components/common/DeleteUserModal';
+import AdminResetPasswordModal from '@/components/common/AdminResetPasswordModal';
 import PageLoader from '@/components/common/PageLoader';
 import UserForm from '@/components/common/UserForm';
 import Toast from '@/components/common/Toast';
@@ -43,6 +44,7 @@ const UsersList: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Estado do toast de notificação
+  const [resetUser, setResetUser] = useState<UserResponse | null>(null);
   const [toast, setToast] = useState<{
     isVisible: boolean;
     message: string;
@@ -401,6 +403,13 @@ const UsersList: React.FC = () => {
                     Editar
                   </button>
                   <button
+                    onClick={() => setResetUser(user)}
+                    title="Gerar senha provisória"
+                    className="flex-1 px-3 py-2 text-sm text-gray-700 hover:bg-gray-800 hover:text-white border border-gray-300 rounded-lg transition-colors"
+                  >
+                    Senha
+                  </button>
+                  <button
                     onClick={() => handleOpenDeleteModal(user)}
                     className="flex-1 px-3 py-2 text-sm text-red-600 hover:bg-red-600 hover:text-white border border-red-600 rounded-lg transition-colors"
                   >
@@ -512,6 +521,14 @@ const UsersList: React.FC = () => {
       />
 
       {/* Toast de notificação */}
+      {resetUser && (
+        <AdminResetPasswordModal
+          user={resetUser}
+          onClose={() => setResetUser(null)}
+          onError={(message) => setToast({ message, type: 'error', isVisible: true })}
+        />
+      )}
+
       <Toast
         message={toast.message}
         type={toast.type}

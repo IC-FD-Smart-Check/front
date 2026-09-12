@@ -1,8 +1,6 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks';
-import { useAuthStore } from '@/store/authStore';
-import RegisterEmailModal from '@/components/common/RegisterEmailModal';
 import Layout from '@/components/layout/Layout';
 import type { RouteConfig } from './routesConfig';
 
@@ -12,15 +10,22 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ config }) => {
   const { isAuthenticated, user } = useAuth();
-  const emailPromptDismissed = useAuthStore((state) => state.emailPromptDismissed);
   const { component: Component, isPrivate, roles, layout, redirect } = config;
-
-  // Alunos importados entram só com RA; enquanto não cadastrarem email, o aviso volta a cada acesso
-  const needsEmail = isPrivate && isAuthenticated && !!user && !user.email && !emailPromptDismissed;
 
   // Se a rota é privada mas usuário não está autenticado
   if (isPrivate && !isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Primeiro acesso pendente (senha provisória ou sem e-mail): nada além da
+  // própria tela de primeiro acesso. Não é opcional — o backend responde 428
+  // no resto do sistema; aqui só evitamos a ida e volta.
+  const firstAccessPending = !!user && (!!user.mustChangePassword || !user.email);
+  if (isPrivate && firstAccessPending && config.path !== '/first-access') {
+    return <Navigate to="/first-access" replace />;
+  }
+  if (config.path === '/first-access' && user && !firstAccessPending) {
+    return <Navigate to="/home" replace />;
   }
 
   // Se usuário está autenticado mas tenta acessar rota pública (login)
@@ -41,21 +46,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ config }) => {
   // Renderizar com ou sem layout
   if (layout) {
     return (
-      <>
-        <Layout>
-          <Component />
-        </Layout>
-        <RegisterEmailModal isOpen={needsEmail} />
-      </>
+      <Layout>
+        <Component />
+      </Layout>
     );
   }
 
-  return (
-    <>
-      <Component />
-      <RegisterEmailModal isOpen={needsEmail} />
-    </>
-  );
+  return <Component />;
 };
 
 export default ProtectedRoute;

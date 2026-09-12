@@ -4,6 +4,8 @@ export interface User {
   ra?: string;
   name: string;
   role: 'STUDENT' | 'ADMIN';
+  /** Senha provisória: precisa trocar antes de usar o sistema. */
+  mustChangePassword?: boolean;
   // Turma do aluno (ausente para ADMIN)
   classGroupId?: string | null;
   classGroupName?: string | null;
@@ -23,7 +25,27 @@ export interface LoginResponse {
 }
 
 export interface ForgotPasswordRequest {
-  email: string;
+  /** E-mail ou RA — o login aceita os dois, a recuperação também. */
+  identifier: string;
+}
+
+export interface ForgotPasswordResponse {
+  status: 'SENT' | 'NO_EMAIL_ON_ACCOUNT' | 'NOT_FOUND';
+  maskedEmail?: string;
+  message: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
+/** Senha provisória gerada pelo admin. Exibida uma única vez. */
+export interface AdminPasswordResetResponse {
+  userId: string;
+  userName: string;
+  temporaryPassword: string;
+  message: string;
 }
 
 export interface UserRequest {

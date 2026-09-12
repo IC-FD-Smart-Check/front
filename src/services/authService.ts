@@ -1,5 +1,12 @@
 import api from './api';
-import type { LoginRequest, LoginResponse, ForgotPasswordRequest, User } from '../types';
+import type {
+  LoginRequest,
+  LoginResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  ResetPasswordRequest,
+  User,
+} from '../types';
 
 class AuthService {
   private readonly STORAGE_KEYS = {
@@ -28,14 +35,38 @@ class AuthService {
   }
 
   /**
-   * Solicita recuperação de senha
+   * Solicita recuperação de senha por e-mail ou RA.
+   * A resposta diz o que aconteceu, para a tela orientar o aluno.
    */
-  async forgotPassword(data: ForgotPasswordRequest): Promise<void> {
+  async forgotPassword(data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> {
     try {
-      await api.post('/auth/forgot-password', data);
+      const response = await api.post<ForgotPasswordResponse>('/auth/forgot-password', data);
+      return response.data;
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message || 'Erro ao enviar solicitação. Tente novamente.'
+      );
+    }
+  }
+
+  /** Confere o token do link antes de mostrar o formulário. */
+  async validateResetToken(token: string): Promise<boolean> {
+    try {
+      const response = await api.get<{ valid: boolean }>('/auth/reset-password/validate', {
+        params: { token },
+      });
+      return !!response.data?.valid;
+    } catch {
+      return false;
+    }
+  }
+
+  async resetPassword(data: ResetPasswordRequest): Promise<void> {
+    try {
+      await api.post('/auth/reset-password', data);
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || 'Não foi possível redefinir a senha. Peça um novo link.'
       );
     }
   }

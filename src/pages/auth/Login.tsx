@@ -54,7 +54,10 @@ const Login: React.FC = () => {
 
     const success = await login(formData);
     if (success) {
-      navigate('/home');
+      // Lê do storage: o estado do hook ainda não refletiu o setAuth.
+      const logged = JSON.parse(localStorage.getItem('user') || 'null');
+      const pending = !!logged && (!!logged.mustChangePassword || !logged.email);
+      navigate(pending ? '/first-access' : '/home');
     }
   };
 

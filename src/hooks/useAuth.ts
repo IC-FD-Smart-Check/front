@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { authService } from '@/services';
-import type { LoginRequest, ForgotPasswordRequest, User } from '@/types';
+import type { LoginRequest, ForgotPasswordRequest, ForgotPasswordResponse, User } from '@/types';
 
 interface UseAuthReturn {
   // Estados
@@ -11,7 +11,7 @@ interface UseAuthReturn {
   // Ações
   login: (credentials: LoginRequest) => Promise<boolean>;
   logout: () => Promise<void>;
-  forgotPassword: (data: ForgotPasswordRequest) => Promise<boolean>;
+  forgotPassword: (data: ForgotPasswordRequest) => Promise<ForgotPasswordResponse | null>;
   clearError: () => void;
   
   // Informações
@@ -57,16 +57,15 @@ export const useAuth = (): UseAuthReturn => {
     }
   };
 
-  const forgotPassword = async (data: ForgotPasswordRequest): Promise<boolean> => {
+  const forgotPassword = async (data: ForgotPasswordRequest): Promise<ForgotPasswordResponse | null> => {
     try {
       setLoading(true);
       setError(null);
-      
-      await authService.forgotPassword(data);
-      return true;
+
+      return await authService.forgotPassword(data);
     } catch (err: any) {
       setError(err.message);
-      return false;
+      return null;
     } finally {
       setLoading(false);
     }

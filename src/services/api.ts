@@ -25,10 +25,17 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // 428: sessão válida, mas o primeiro acesso ainda não foi concluído.
+    // Não desloga — só leva para a tela que resolve.
+    if (error.response?.status === 428 && window.location.pathname !== '/first-access') {
+      window.location.href = '/first-access';
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 401 || error.response?.status === 403) {
-      // Só redireciona se não estiver na página de login ou forgot-password
+      // Só redireciona se não estiver numa página pública de autenticação
       const currentPath = window.location.pathname;
-      const isAuthPage = currentPath === '/login' || currentPath === '/forgot-password';
+      const isAuthPage = ['/login', '/forgot-password', '/reset-password'].includes(currentPath);
       
       localStorage.removeItem('token');
       

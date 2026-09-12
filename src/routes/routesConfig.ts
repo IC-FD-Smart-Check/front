@@ -1,5 +1,7 @@
 import Login from '@/pages/auth/Login';
 import ForgotPassword from '@/pages/auth/ForgotPassword';
+import ResetPassword from '@/pages/auth/ResetPassword';
+import FirstAccess from '@/pages/auth/FirstAccess';
 import Home from '@/pages/Home';
 import UsersList from '@/pages/UsersList';
 import type { ComponentType } from 'react';
@@ -33,6 +35,21 @@ export const routesConfig: RouteConfig[] = [
     path: '/forgot-password',
     component: ForgotPassword,
     isPrivate: false,
+    layout: false,
+  },
+  {
+    // Destino do link enviado por e-mail (?token=...)
+    path: '/reset-password',
+    component: ResetPassword,
+    isPrivate: false,
+    layout: false,
+  },
+  {
+    // Troca de senha provisória + cadastro de e-mail. Sem layout: nada de
+    // menu enquanto o primeiro acesso não termina.
+    path: '/first-access',
+    component: FirstAccess,
+    isPrivate: true,
     layout: false,
   },
 

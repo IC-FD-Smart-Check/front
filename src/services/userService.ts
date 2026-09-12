@@ -1,4 +1,5 @@
 import api from './api';
+import type { AdminPasswordResetResponse } from '@/types';
 import { UserRequest, UserResponse } from '@/types';
 
 export const userService = {
@@ -27,6 +28,12 @@ export const userService = {
   },
 
   // DELETE - Deleta usuário
+  /** Senha provisória (ADMIN). Vem uma vez só: o servidor guarda apenas o hash. */
+  resetPassword: async (id: string): Promise<AdminPasswordResetResponse> => {
+    const response = await api.post<AdminPasswordResetResponse>(`/users/${id}/reset-password`);
+    return response.data;
+  },
+
   deleteUser: async (id: string): Promise<void> => {
     await api.delete(`/users/${id}`);
   },
