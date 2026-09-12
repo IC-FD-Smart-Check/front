@@ -38,8 +38,6 @@ const AdminCheck: React.FC = () => {
     return matchesSearch && matchesEvent;
   });
 
-  // Cards de resumo derivados dos registros JÁ filtrados, para refletirem o
-  // filtro de evento/busca (antes eram calculados uma vez sobre o total — BUG-007).
   const stats = {
     totalCheckins: filteredRecords.length,
     presentCount: filteredRecords.filter((r) => r.checkinTime).length,

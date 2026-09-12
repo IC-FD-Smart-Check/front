@@ -36,6 +36,7 @@ const EventForm: React.FC<EventFormProps> = ({
     title?: string;
     startDate?: string;
     endDate?: string;
+    radius?: string;
   }>({});
 
   // Preenche o formulário quando edita
@@ -107,6 +108,15 @@ const EventForm: React.FC<EventFormProps> = ({
         newErrors.endDate =
           "Data de término deve ser posterior à data de início";
       }
+    }
+
+    // ADM007: localização e raio andam juntos. Informar a localização sem raio
+    // deixa o subevento que reaproveita essa localização quebrar depois, ao
+    // exigir o raio. Exige o raio já aqui, na origem.
+    const hasLocation = formData.latitude != null && formData.longitude != null;
+    const hasRadius = formData.radius != null && Number(formData.radius) > 0;
+    if (hasLocation && !hasRadius) {
+      newErrors.radius = "Informe o raio (em metros) para a localização escolhida";
     }
 
     setErrors(newErrors);
@@ -360,6 +370,9 @@ const EventForm: React.FC<EventFormProps> = ({
               onChange={handleLocationChange}
               disabled={isSubmitting}
             />
+            {errors.radius && (
+              <p className="mt-2 text-sm text-red-600">{errors.radius}</p>
+            )}
           </div>
 
           {/* Botões */}

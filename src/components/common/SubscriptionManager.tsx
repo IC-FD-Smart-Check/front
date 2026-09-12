@@ -223,7 +223,7 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
                   </span>
                 </div>
 
-                <div className="border border-gray-200 rounded-lg bg-white max-h-[26rem] overflow-y-auto">
+                <div className="border border-gray-200 rounded-lg bg-white max-h-[min(26rem,32vh)] overflow-y-auto">
                   {filteredSubscriptions.length === 0 ? (
                     <div className="py-8 text-center text-sm text-gray-500">
                       Nenhum inscrito com esse filtro.

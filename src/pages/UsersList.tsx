@@ -217,7 +217,6 @@ const UsersList: React.FC = () => {
 
       // Tratamento de erros específicos — distingue RA de e-mail. O backend
       // responde "RA já cadastrado" ou "Email já cadastrado"; antes qualquer
-      // "já cadastrado" era rotulado como e-mail (BUG-003).
       const backendMessage: string | undefined = err.response?.data?.message;
       const normalized = backendMessage?.toLowerCase() ?? '';
       if (normalized.includes('ra já cadastrado')) {
@@ -275,14 +274,14 @@ const UsersList: React.FC = () => {
       {/* Barra de ações e filtros */}
       <div className="bg-white rounded-lg shadow-sm p-4 mb-4 sm:mb-6">
         <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 items-stretch lg:items-center justify-between">
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 flex-1 w-full">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 flex-1 w-full min-w-0">
             {/* Busca */}
             <input
               type="text"
               placeholder="Buscar por nome ou email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B7294A] focus:border-transparent"
+              className="flex-1 min-w-0 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B7294A] focus:border-transparent"
             />
 
             {/* Filtro por role */}
@@ -300,7 +299,7 @@ const UsersList: React.FC = () => {
             <select
               value={classGroupFilter}
               onChange={(e) => setClassGroupFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B7294A] focus:border-transparent bg-white"
+              className="min-w-0 sm:max-w-[13rem] px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B7294A] focus:border-transparent bg-white"
             >
               <option value="ALL">Todas as turmas</option>
               <option value="NONE">Sem turma</option>
@@ -313,7 +312,7 @@ const UsersList: React.FC = () => {
           </div>
 
           {/* Ações */}
-          <div className="flex gap-2 sm:gap-3">
+          <div className="flex gap-2 sm:gap-3 shrink-0">
             <button
               type="button"
               onClick={() => navigate('/import')}

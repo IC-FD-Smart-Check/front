@@ -271,7 +271,6 @@ const SubEventForm: React.FC<SubEventFormProps> = ({
     }
 
     // Validação de localização (obrigatória) — a mensagem vai para o campo
-    // `location`, exibido junto ao mapa, e não para `title` (BUG-005).
     if (!formData.latitude || !formData.longitude) {
       newErrors.location = newErrors.location || 'Localização é obrigatória. Por favor, defina as coordenadas no mapa.';
     }

@@ -98,6 +98,11 @@ const SelfieCapture: React.FC<SelfieCaptureProps> = ({
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    // O preview do vídeo é espelhado (scale-x-[-1], natural para selfie). Sem
+    // espelhar o canvas também, a foto salva sairia invertida em relação ao que
+    // o aluno viu ao confirmar. Espelha para o salvo bater com a pré-visualização.
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     // Reduzir aqui, e não no servidor: reencodar imagem custa 50-200ms de CPU

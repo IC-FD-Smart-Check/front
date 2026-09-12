@@ -206,7 +206,6 @@ export default function Reports() {
       for (const subEvent of data) {
         const subEventChecks = records.filter(check => check.subEventId === subEvent.id);
         // Mesma regra da tela "Ver Presença" (presenceOf), para os números baterem
-        // entre a listagem e o detalhe (BUG-008):
         //  - presente: tem check-in E check-out
         //  - incompleto: só um dos dois
         //  - ausente: inscrito sem NENHUM registro de check
@@ -695,7 +694,6 @@ export default function Reports() {
         </div>
       ) : selectedSubeventoId ? (
         /* ----- Detalhe de um subevento ----- */        <div className="space-y-4 sm:space-y-6">
-          {/* Voltar para a lista de subeventos (BUG-010) */}
           <button
             type="button"
             onClick={() => setSelectedSubeventoId('')}
