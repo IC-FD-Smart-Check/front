@@ -23,6 +23,15 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
+/** Uma entrada do seletor de exportação, já com a ação que ela executa. */
+interface OpcaoExportacao {
+  id: string;
+  nome: string;
+  descricao: string;
+  formato: 'PDF' | 'EXCEL' | 'ZIP';
+  executar: () => Promise<void>;
+}
+
 interface Student {
   id: string;
   name: string;
@@ -152,14 +161,13 @@ export default function Reports() {
   const [loadingSubeventos, setLoadingSubeventos] = useState(false);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [subEventInscritos, setSubEventInscritos] = useState(0);
-  const [exportingPdf, setExportingPdf] = useState(false);
-  const [exportingExcel, setExportingExcel] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const [filters, setFilters] = useState<Filters>(emptyFilters);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [detalhes, setDetalhes] = useState<AttendanceDetailsSubject | null>(null);
   const [templates, setTemplates] = useState<ReportTemplate[]>([]);
-  const [exportingTemplateId, setExportingTemplateId] = useState<string | null>(null);
+  const [modeloId, setModeloId] = useState('');
 
   useEffect(() => {
     loadEvents();
@@ -410,101 +418,84 @@ export default function Reports() {
     window.URL.revokeObjectURL(url);
   };
 
-  const handleExportTemplate = async (template: ReportTemplate) => {
-    if (!selectedSubeventoId) {
-      showToast('Escolha um subevento para usar este modelo', 'error');
-      return;
+  /**
+   * Modelos disponiveis para a selecao atual.
+   *
+   * Os modelos do registro trabalham por subevento. Sem subevento escolhido a
+   * exportacao cobre o evento inteiro, e para isso existem so as duas listas
+   * basicas, nos endpoints por evento.
+   */
+  const opcoesExportacao = useMemo<OpcaoExportacao[]>(() => {
+    if (selectedSubeventoId) {
+      return templates.map((template) => ({
+        id: template.id,
+        nome: template.name,
+        descricao: template.description,
+        formato: template.format,
+        executar: async () => {
+          const response = await reportService.exportSubEventByTemplate(
+            selectedSubeventoId,
+            template.id,
+          );
+          const ext =
+            template.format === 'PDF' ? 'pdf' : template.format === 'ZIP' ? 'zip' : 'xlsx';
+          baixarBlob(response, `${template.id}.${ext}`);
+        },
+      }));
     }
 
-    setExportingTemplateId(template.id);
+    if (!selectedEventId) return [];
+
+    return [
+      {
+        id: 'evento-pdf',
+        nome: 'Lista de presença (PDF)',
+        descricao:
+          'Uma lista com todos os inscritos de todos os subeventos do evento, com horários e situação de presença.',
+        formato: 'PDF',
+        executar: async () => {
+          const response = await reportService.exportEventPdf(selectedEventId);
+          baixarBlob(response, 'relatorio_evento.pdf');
+        },
+      },
+      {
+        id: 'evento-excel',
+        nome: 'Lista de presença (Excel)',
+        descricao:
+          'Os mesmos dados da lista em PDF, em planilha, para filtrar e contar presenças do evento inteiro.',
+        formato: 'EXCEL',
+        executar: async () => {
+          const response = await reportService.exportEventExcel(selectedEventId);
+          baixarBlob(response, 'relatorio_evento.xlsx');
+        },
+      },
+    ];
+  }, [selectedEventId, selectedSubeventoId, templates]);
+
+  const modeloSelecionado =
+    opcoesExportacao.find((opcao) => opcao.id === modeloId) ?? opcoesExportacao[0];
+
+  // Trocar de evento ou subevento muda a lista: reaponta para um modelo valido.
+  useEffect(() => {
+    setModeloId(opcoesExportacao[0]?.id ?? '');
+  }, [opcoesExportacao]);
+
+  const handleExport = async () => {
+    if (!modeloSelecionado) return;
+
+    setExporting(true);
     try {
-      const response = await reportService.exportSubEventByTemplate(selectedSubeventoId, template.id);
-      const ext = template.format === 'PDF' ? 'pdf' : template.format === 'ZIP' ? 'zip' : 'xlsx';
-      baixarBlob(response, `${template.id}.${ext}`);
-      showToast(`${template.name} exportado com sucesso`, 'success');
+      await modeloSelecionado.executar();
+      showToast(`${modeloSelecionado.nome} exportado com sucesso`, 'success');
     } catch (error) {
-      showToast(`Erro ao exportar ${template.name}`, 'error');
+      showToast(`Erro ao exportar ${modeloSelecionado.nome}`, 'error');
       console.error(error);
     } finally {
-      setExportingTemplateId(null);
+      setExporting(false);
     }
   };
 
-  const handleExportPDF = async () => {
-    if (!selectedEventId) {
-      showToast('Selecione um evento para exportar', 'error');
-      return;
-    }
 
-    setExportingPdf(true);
-    try {
-      const response = selectedSubeventoId
-        ? await reportService.exportSubEventPdf(selectedSubeventoId)
-        : await reportService.exportEventPdf(selectedEventId);
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-
-      const contentDisposition = response.headers['content-disposition'] as string | undefined;
-      const match = contentDisposition?.match(/filename="?([^";]+)"?/i);
-      const filename = match?.[1] ?? (selectedSubeventoId ? 'relatorio_subevento.pdf' : 'relatorio_evento.pdf');
-
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-
-      showToast('PDF exportado com sucesso', 'success');
-    } catch (error) {
-      showToast('Erro ao exportar PDF', 'error');
-      console.error(error);
-    } finally {
-      setExportingPdf(false);
-    }
-  };
-
-  const handleExportExcel = async () => {
-    if (!selectedEventId) {
-      showToast('Selecione um evento para exportar', 'error');
-      return;
-    }
-
-    setExportingExcel(true);
-    try {
-      const response = selectedSubeventoId
-        ? await reportService.exportSubEventExcel(selectedSubeventoId)
-        : await reportService.exportEventExcel(selectedEventId);
-      const blob = new Blob([response.data], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      });
-      const url = window.URL.createObjectURL(blob);
-
-      const contentDisposition = response.headers['content-disposition'] as string | undefined;
-      const match = contentDisposition?.match(/filename="?([^";]+)"?/i);
-      const filename = match?.[1] ?? (selectedSubeventoId ? 'relatorio_subevento.xlsx' : 'relatorio_evento.xlsx');
-
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-
-      showToast('Excel exportado com sucesso', 'success');
-    } catch (error) {
-      showToast('Erro ao exportar Excel', 'error');
-      console.error(error);
-    } finally {
-      setExportingExcel(false);
-    }
-  };
-
-  // A tabela mostra o essencial; todo o resto é detalhe de apuração e vive no
-  // modal. Abre para qualquer aluno, inclusive o ausente — saber que não há
-  // registro nenhum também é informação.
   const abrirDetalhes = (student: Student) => {
     setDetalhes({
       name: student.name,
@@ -529,11 +520,11 @@ export default function Reports() {
   const selectedEvent = events.find((event) => event.id === selectedEventId);
   const selectedSubevento = subeventos.find((sub) => sub.id === selectedSubeventoId);
 
-  // O botão de exportar usa a seleção atual: subevento específico ou evento inteiro
+  // A exportação usa a seleção atual: subevento específico ou evento inteiro.
   const exportScope = selectedSubevento
-    ? `do subevento "${selectedSubevento.title}"`
+    ? `o subevento "${selectedSubevento.title}"`
     : selectedEvent
-    ? `do evento "${selectedEvent.title}" (todos os subeventos)`
+    ? `todos os subeventos do evento "${selectedEvent.title}"`
     : '';
 
   const selectClass =
@@ -606,68 +597,51 @@ export default function Reports() {
           </div>
         </div>
 
-        {/* Exportação — sempre acessível assim que há um evento escolhido */}
+        {/* Exportação: um seletor com os modelos e um botão. Antes eram dois
+            botões grandes mais uma fileira de botões menores, e nada dizia que
+            uns valiam para o evento e outros só para o subevento. */}
         {selectedEventId && (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-4 pt-4 border-t border-gray-200">
-            <p className="text-xs sm:text-sm text-gray-600 flex-1 min-w-0">
-              Exportar a presença <span className="font-medium text-gray-900">{exportScope}</span>
-            </p>
-            <div className="flex gap-2">
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+              <div className="flex-1 min-w-0">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Modelo de exportação
+                </label>
+                <select
+                  value={modeloSelecionado?.id ?? ''}
+                  onChange={(e) => setModeloId(e.target.value)}
+                  disabled={exporting || opcoesExportacao.length === 0}
+                  className={selectClass}
+                >
+                  {opcoesExportacao.map((opcao) => (
+                    <option key={opcao.id} value={opcao.id}>
+                      {opcao.nome}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <button
-                onClick={handleExportPDF}
-                disabled={exportingPdf}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                onClick={handleExport}
+                disabled={exporting || !modeloSelecionado}
+                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#B7294A] text-white text-sm font-semibold hover:bg-[#9d2340] disabled:opacity-50 disabled:cursor-not-allowed transition-colors sm:w-auto w-full"
               >
-                {exportingPdf ? (
+                {exporting ? (
                   <Loader2 size={18} className="animate-spin" />
+                ) : modeloSelecionado?.formato === 'EXCEL' ? (
+                  <Sheet size={18} />
                 ) : (
                   <FileText size={18} />
                 )}
-                PDF
-              </button>
-              <button
-                onClick={handleExportExcel}
-                disabled={exportingExcel}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-green-200 bg-green-50 text-green-700 text-sm font-medium hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {exportingExcel ? <Loader2 size={18} className="animate-spin" /> : <Sheet size={18} />}
-                Excel
+                {exporting ? 'Exportando...' : 'Exportar'}
               </button>
             </div>
-          </div>
-        )}
 
-        {/* Modelos extras. Vivem por subevento, entao so aparecem quando ha um
-            escolhido — e a mensagem diz o porque em vez de esconder calado. */}
-        {selectedEventId && templates.length > 0 && (
-          <div className="mt-3 pt-3 border-t border-gray-100">
-            <p className="text-xs text-gray-500 mb-2">Outros modelos</p>
-
-            {!selectedSubeventoId ? (
-              <p className="text-xs text-gray-400">
-                Escolha um subevento acima para usar os modelos abaixo.
+            {modeloSelecionado && (
+              <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+                {modeloSelecionado.descricao}{' '}
+                <span className="text-gray-400">Abrange {exportScope}.</span>
               </p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {templates.map((template) => (
-                  <button
-                    key={template.id}
-                    onClick={() => handleExportTemplate(template)}
-                    disabled={exportingTemplateId !== null}
-                    title={template.description}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-xs font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {exportingTemplateId === template.id ? (
-                      <Loader2 size={14} className="animate-spin" />
-                    ) : template.format === 'PDF' ? (
-                      <FileText size={14} className="text-red-600" />
-                    ) : (
-                      <Sheet size={14} className="text-green-600" />
-                    )}
-                    {template.name}
-                  </button>
-                ))}
-              </div>
             )}
           </div>
         )}
