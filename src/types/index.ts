@@ -263,6 +263,9 @@ export interface CheckResponse {
   /** Lançado na mão por um admin, em vez de escaneado pelo aluno. */
   checkinManual?: boolean;
   checkoutManual?: boolean;
+  /** IP de onde cada ação partiu. Nulo em marcação manual. */
+  checkinIp?: string | null;
+  checkoutIp?: string | null;
 }
 
 /** Um inscrito e a situação dele, na tela de marcação manual (ADMIN). */

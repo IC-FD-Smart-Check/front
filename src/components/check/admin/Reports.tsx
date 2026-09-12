@@ -40,6 +40,8 @@ interface Student {
   /** Lançado na mão por um admin, em vez de escaneado pelo aluno. */
   checkinManual?: boolean;
   checkoutManual?: boolean;
+  checkinIp?: string | null;
+  checkoutIp?: string | null;
 }
 
 interface SubEventStats {
@@ -310,6 +312,8 @@ export default function Reports() {
           student.hasCheckoutPhoto = check.hasCheckoutPhoto;
           student.checkinManual = check.checkinManual;
           student.checkoutManual = check.checkoutManual;
+          student.checkinIp = check.checkinIp;
+          student.checkoutIp = check.checkoutIp;
         });
 
       const processed = [...rows.values()].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
@@ -919,6 +923,11 @@ export default function Reports() {
                                   marcado pelo admin
                                 </span>
                               )}
+                              {student.checkinIp && (
+                                <span className="block text-[10px] font-normal text-gray-400 font-mono">
+                                  {student.checkinIp}
+                                </span>
+                              )}
                             </span>
                           ) : (
                             <span className="text-gray-400">—</span>
@@ -931,6 +940,11 @@ export default function Reports() {
                               {student.checkoutManual && (
                                 <span className="block text-[10px] font-normal text-amber-700">
                                   marcado pelo admin
+                                </span>
+                              )}
+                              {student.checkoutIp && (
+                                <span className="block text-[10px] font-normal text-gray-400 font-mono">
+                                  {student.checkoutIp}
                                 </span>
                               )}
                             </span>
@@ -1009,6 +1023,9 @@ export default function Reports() {
                           {student.checkinManual && (
                             <p className="text-[10px] text-amber-700">marcado pelo admin</p>
                           )}
+                          {student.checkinIp && (
+                            <p className="text-[10px] text-gray-400 font-mono">{student.checkinIp}</p>
+                          )}
                         </div>
                         <div className="min-w-0">
                           <p className="text-gray-500">Check-out</p>
@@ -1017,6 +1034,9 @@ export default function Reports() {
                           </p>
                           {student.checkoutManual && (
                             <p className="text-[10px] text-amber-700">marcado pelo admin</p>
+                          )}
+                          {student.checkoutIp && (
+                            <p className="text-[10px] text-gray-400 font-mono">{student.checkoutIp}</p>
                           )}
                         </div>
                       </div>
