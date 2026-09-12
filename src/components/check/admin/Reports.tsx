@@ -19,6 +19,7 @@ import {
   Sheet,
   Loader2,
   Camera,
+  ArrowLeft,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -44,6 +45,7 @@ interface Student {
 interface SubEventStats {
   inscritos: number;
   presentes: number;
+  incompletos: number;
   ausentes: number;
 }
 
@@ -201,18 +203,27 @@ export default function Reports() {
 
       for (const subEvent of data) {
         const subEventChecks = records.filter(check => check.subEventId === subEvent.id);
+        // Mesma regra da tela "Ver Presença" (presenceOf), para os números baterem
+        // entre a listagem e o detalhe (BUG-008):
+        //  - presente: tem check-in E check-out
+        //  - incompleto: só um dos dois
+        //  - ausente: inscrito sem NENHUM registro de check
         const presentes = subEventChecks.filter(c => c.checkinTime && c.checkoutTime).length;
-        const ausentes = subEventChecks.filter(
+        const incompletos = subEventChecks.filter(
           c => (c.checkinTime && !c.checkoutTime) || (!c.checkinTime && c.checkoutTime)
         ).length;
+        // Check é único por (subevento, usuário), então cada registro é um inscrito distinto.
+        const comRegistro = subEventChecks.length;
 
         try {
           const subscriptions = await subscriptionService.listBySubEvent(subEvent.id);
           const inscritos = subscriptions.length;
+          const ausentes = Math.max(0, inscritos - comRegistro);
 
           statsMap.set(subEvent.id, {
             inscritos,
             presentes,
+            incompletos,
             ausentes,
           });
         } catch (error) {
@@ -221,7 +232,8 @@ export default function Reports() {
           statsMap.set(subEvent.id, {
             inscritos: 0,
             presentes,
-            ausentes,
+            incompletos,
+            ausentes: 0,
           });
         }
       }
@@ -404,7 +416,8 @@ export default function Reports() {
     setExportingTemplateId(template.id);
     try {
       const response = await reportService.exportSubEventByTemplate(selectedSubeventoId, template.id);
-      baixarBlob(response, `${template.id}.${template.format === 'PDF' ? 'pdf' : 'xlsx'}`);
+      const ext = template.format === 'PDF' ? 'pdf' : template.format === 'ZIP' ? 'zip' : 'xlsx';
+      baixarBlob(response, `${template.id}.${ext}`);
       showToast(`${template.name} exportado com sucesso`, 'success');
     } catch (error) {
       showToast(`Erro ao exportar ${template.name}`, 'error');
@@ -671,6 +684,16 @@ export default function Reports() {
         </div>
       ) : selectedSubeventoId ? (
         /* ----- Detalhe de um subevento ----- */        <div className="space-y-4 sm:space-y-6">
+          {/* Voltar para a lista de subeventos (BUG-010) */}
+          <button
+            type="button"
+            onClick={() => setSelectedSubeventoId('')}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+          >
+            <ArrowLeft size={16} />
+            Voltar
+          </button>
+
           {/* Totais do subevento */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
             <StatTile label="Inscritos" value={stats.inscritos} tone="blue" icon={Users} />
@@ -1057,6 +1080,9 @@ export default function Reports() {
                     Presentes
                   </th>
                   <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Incompletos
+                  </th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                     Ausentes
                   </th>
                   <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -1069,6 +1095,7 @@ export default function Reports() {
                   const subStats = subEventStatsMap.get(subevento.id) || {
                     inscritos: 0,
                     presentes: 0,
+                    incompletos: 0,
                     ausentes: 0,
                   };
 
@@ -1087,6 +1114,9 @@ export default function Reports() {
                       </td>
                       <td className="px-6 py-5 text-center">
                         <span className="text-lg font-bold text-green-900">{subStats.presentes}</span>
+                      </td>
+                      <td className="px-6 py-5 text-center">
+                        <span className="text-lg font-bold text-yellow-700">{subStats.incompletos}</span>
                       </td>
                       <td className="px-6 py-5 text-center">
                         <span className="text-lg font-bold text-red-900">{subStats.ausentes}</span>
@@ -1112,6 +1142,7 @@ export default function Reports() {
               const subStats = subEventStatsMap.get(subevento.id) || {
                 inscritos: 0,
                 presentes: 0,
+                incompletos: 0,
                 ausentes: 0,
               };
 
@@ -1126,7 +1157,7 @@ export default function Reports() {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 mb-3">
+                  <div className="grid grid-cols-2 gap-2 mb-3">
                     <div className="text-center bg-blue-50 border border-blue-200 rounded-lg py-2">
                       <p className="text-[11px] text-blue-700 mb-0.5">Inscritos</p>
                       <p className="text-lg font-bold text-blue-900">{subStats.inscritos || '-'}</p>
@@ -1134,6 +1165,10 @@ export default function Reports() {
                     <div className="text-center bg-green-50 border border-green-200 rounded-lg py-2">
                       <p className="text-[11px] text-green-700 mb-0.5">Presentes</p>
                       <p className="text-lg font-bold text-green-900">{subStats.presentes}</p>
+                    </div>
+                    <div className="text-center bg-yellow-50 border border-yellow-200 rounded-lg py-2">
+                      <p className="text-[11px] text-yellow-700 mb-0.5">Incompletos</p>
+                      <p className="text-lg font-bold text-yellow-700">{subStats.incompletos}</p>
                     </div>
                     <div className="text-center bg-red-50 border border-red-200 rounded-lg py-2">
                       <p className="text-[11px] text-red-700 mb-0.5">Ausentes</p>

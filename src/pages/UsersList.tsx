@@ -79,6 +79,17 @@ const UsersList: React.FC = () => {
     }
   };
 
+  // Recarrega a lista silenciosamente (sem o loader de página inteira), para
+  // refletir a ordenação por semestre/nome vinda do backend após criar/editar.
+  const reloadUsers = async () => {
+    try {
+      const data = await userService.getAllUsers();
+      setUsers(data);
+    } catch (err) {
+      console.error('Erro ao recarregar usuários:', err);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -188,27 +199,33 @@ const UsersList: React.FC = () => {
       
       if (formModal.user) {
         // Editar usuário existente
-        const updated = await userService.updateUser(formModal.user.id, data);
-        setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
+        await userService.updateUser(formModal.user.id, data);
         showToast('Usuário atualizado com sucesso!', 'success');
       } else {
         // Criar novo usuário
-        const created = await userService.createUser(data);
-        setUsers(prev => [...prev, created]);
+        await userService.createUser(data);
         showToast('Usuário criado com sucesso!', 'success');
       }
-      
+
+      // Recarrega para reordenar (por semestre/nome) em vez de anexar no fim da lista.
+      await reloadUsers();
       handleCloseFormModal();
     } catch (err: any) {
       let errorMessage = 'Não foi possível salvar o usuário. Verifique os dados e tente novamente.';
-      
-      // Tratamento de erros específicos
-      if (err.response?.status === 409 || err.response?.data?.message?.includes('já cadastrado')) {
+
+      // Tratamento de erros específicos — distingue RA de e-mail. O backend
+      // responde "RA já cadastrado" ou "Email já cadastrado"; antes qualquer
+      // "já cadastrado" era rotulado como e-mail (BUG-003).
+      const backendMessage: string | undefined = err.response?.data?.message;
+      const normalized = backendMessage?.toLowerCase() ?? '';
+      if (normalized.includes('ra já cadastrado')) {
+        errorMessage = 'Este RA já está cadastrado. Use outro RA.';
+      } else if (normalized.includes('email já cadastrado') || err.response?.status === 409) {
         errorMessage = 'Este email já está cadastrado. Use outro email.';
       } else if (err.response?.status === 400) {
-        errorMessage = err.response?.data?.message || 'Dados inválidos. Verifique os campos e tente novamente.';
-      } else if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
+        errorMessage = backendMessage || 'Dados inválidos. Verifique os campos e tente novamente.';
+      } else if (backendMessage) {
+        errorMessage = backendMessage;
       }
       
       showToast(errorMessage, 'error');
@@ -399,22 +416,22 @@ const UsersList: React.FC = () => {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Nome
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Email
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     RA
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Perfil
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Turma
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Ações
                   </th>
                 </tr>
@@ -422,21 +439,21 @@ const UsersList: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
                         {user.name}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-600">{user.email || '—'}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-600">{user.ra || '—'}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap">
                       {getRoleBadge(user.role)}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-4">
                       {user.classGroupName ? (
                         <div>
                           <div className="text-sm text-gray-900">
@@ -451,7 +468,7 @@ const UsersList: React.FC = () => {
                         <span className="text-sm text-gray-400">—</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex gap-2 justify-end">
                         <button
                           onClick={() => handleOpenEditModal(user)}

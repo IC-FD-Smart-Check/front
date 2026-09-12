@@ -1,73 +1,68 @@
-# React + TypeScript + Vite
+# FD SmartCheck — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interface web do FD SmartCheck: sistema de check-in por **QR Code + geolocalização** para eventos acadêmicos. Administradores gerenciam eventos, atividades, usuários e relatórios; alunos veem seus eventos e fazem check-in escaneando o QR e enviando a localização.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React 19** · **TypeScript** · **Vite 7**
+- **Tailwind CSS** (estilo) · **Zustand** (estado global de auth) · **React Router v7**
+- **Axios** (instância central em `src/services/api.ts`, injeta o JWT)
+- **Leaflet / React Leaflet** (mapas) · **html5-qrcode** + **react-qr-code** (QR) · **crypto-js** (assinatura de geo)
 
-## React Compiler
+## Pré‑requisitos
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Node.js** (18+ recomendado) e npm.
+- Backend rodando em `http://localhost:8080` (ver `../back/README.md`).
 
-## Expanding the ESLint configuration
+## Como rodar
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cd front
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+O Vite sobe em **http://localhost:3000** (porta fixada em `vite.config.ts`) com um proxy de `/api` → `http://localhost:8080`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Scripts
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+| Comando | O que faz |
+|---------|-----------|
+| `npm run dev` | Servidor de desenvolvimento (porta **3000**, HMR) |
+| `npm run build` | Build de produção (`vite build`) |
+| `npm run preview` | Serve o build de produção localmente |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | Checagem de tipos (`tsc --noEmit`) |
+
+## Variáveis de ambiente
+
+Copie `.env.example` para `.env` e ajuste se necessário:
+
+| Variável | Descrição | Default |
+|----------|-----------|---------|
+| `VITE_API_URL` | Base da API | `http://localhost:8080/api` |
+| `VITE_GEO_SECRET_KEY` | Segredo do HMAC de geolocalização — **precisa ser igual ao `app.geo.secret-key` do backend** | — |
+
+> **Atenção**: `VITE_GEO_SECRET_KEY` vai para o bundle do navegador (toda variável `VITE_*` é embutida no build). É o mesmo segredo compartilhado com o backend para assinar o payload de geolocalização do check-in — mantenha os dois lados em sincronia.
+
+## Estrutura
+
 ```
+front/src/
+├── components/   # check/ (admin, student, shared), common/ (forms, modais, Button/Input), layout/, import/
+├── pages/        # uma pasta por feature: Event/, SubEvent/, check/, auth/, Academic/, Import/, Profile/, UsersList.tsx
+├── routes/       # index.tsx (router), ProtectedRoute.tsx, routesConfig.ts
+├── services/     # um arquivo por recurso de API + api.ts (axios com interceptor de JWT)
+├── store/        # authStore.ts (Zustand — só auth)
+├── types/        # index.ts (todos os tipos do domínio, espelhando os DTOs do backend)
+└── utils/        # crypto.ts, geoSecurity.ts, semester.ts
+```
+
+## Convenções
+
+- **Só Tailwind** para estilo (sem CSS custom).
+- Estado de UI (loading/erro/dados) é **local** (`useState`); só a auth vai no store global.
+- Toda chamada HTTP passa pela instância `api` (`src/services/api.ts`); nunca `fetch` direto.
+- Todos os tipos do domínio ficam em `src/types/index.ts`.
+
+Convenções completas em `front/CLAUDE.md`; documentação do backend em `../back/docs/`.

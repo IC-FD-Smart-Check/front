@@ -5,7 +5,7 @@ export interface ReportTemplate {
   id: string;
   name: string;
   description: string;
-  format: 'PDF' | 'EXCEL';
+  format: 'PDF' | 'EXCEL' | 'ZIP';
 }
 
 export const reportService = {

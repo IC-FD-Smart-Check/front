@@ -15,11 +15,6 @@ const AdminCheck: React.FC = () => {
   const [filterEvent, setFilterEvent] = useState<string>('ALL');
   const [checkRecords, setCheckRecords] = useState<CheckResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [stats, setStats] = useState({
-    totalCheckins: 0,
-    presentCount: 0,
-    checkoutCount: 0,
-  });
 
   useEffect(() => {
     loadCheckHistory();
@@ -30,15 +25,6 @@ const AdminCheck: React.FC = () => {
     try {
       const records = await checkService.getHistory();
       setCheckRecords(records);
-
-      const checkIns = records.filter((r) => r.checkinTime).length;
-      const checkOuts = records.filter((r) => r.checkoutTime).length;
-
-      setStats({
-        totalCheckins: records.length,
-        presentCount: checkIns,
-        checkoutCount: checkOuts,
-      });
     } catch (err) {
       showToast('Erro ao carregar histórico de check-ins', 'error');
     } finally {
@@ -51,6 +37,14 @@ const AdminCheck: React.FC = () => {
     const matchesEvent = filterEvent === 'ALL' || record.eventTitle === filterEvent;
     return matchesSearch && matchesEvent;
   });
+
+  // Cards de resumo derivados dos registros JÁ filtrados, para refletirem o
+  // filtro de evento/busca (antes eram calculados uma vez sobre o total — BUG-007).
+  const stats = {
+    totalCheckins: filteredRecords.length,
+    presentCount: filteredRecords.filter((r) => r.checkinTime).length,
+    checkoutCount: filteredRecords.filter((r) => r.checkoutTime).length,
+  };
 
   const uniqueEvents = Array.from(
     new Map(checkRecords.map((record) => [record.eventTitle, record.eventTitle])).values()

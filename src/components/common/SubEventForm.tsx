@@ -235,13 +235,14 @@ const SubEventForm: React.FC<SubEventFormProps> = ({
       newErrors.checkoutEnd = 'Término do checkout é obrigatório';
     }
 
-    // Validação de localização (obrigatória)
+    // Validação de localização (obrigatória) — a mensagem vai para o campo
+    // `location`, exibido junto ao mapa, e não para `title` (BUG-005).
     if (!formData.latitude || !formData.longitude) {
-      newErrors.title = newErrors.title || 'Localização é obrigatória. Por favor, defina as coordenadas no mapa.';
+      newErrors.location = newErrors.location || 'Localização é obrigatória. Por favor, defina as coordenadas no mapa.';
     }
 
     if (!formData.radius || formData.radius <= 0) {
-      newErrors.title = newErrors.title || 'Raio de localização é obrigatório e deve ser maior que zero.';
+      newErrors.location = newErrors.location || 'Raio de localização é obrigatório e deve ser maior que zero.';
     }
 
     // Validação de ordem de datas
@@ -596,6 +597,11 @@ const SubEventForm: React.FC<SubEventFormProps> = ({
                 onChange={handleLocationChange}
                 disabled={isSubmitting}
               />
+            )}
+
+            {/* Erro de localização/raio exibido junto ao mapa (BUG-005) */}
+            {errors.location && (
+              <p className="mt-3 text-sm text-red-600">{errors.location}</p>
             )}
           </div>
 

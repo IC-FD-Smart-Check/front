@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { AlertTriangle, CalendarCheck } from 'lucide-react';
 import { subEventService, subscriptionService } from '@/services';
-import type { SubEventResponse } from '@/types';
+import type { SubEventResponse, SubscriptionResponse } from '@/types';
 import BulkStudentPicker from './BulkStudentPicker';
 
 interface EventSubscriptionManagerProps {
@@ -26,8 +26,27 @@ const EventSubscriptionManager: React.FC<EventSubscriptionManagerProps> = ({
   onError,
 }) => {
   const [subEvents, setSubEvents] = useState<SubEventResponse[]>([]);
+  const [subscribedUserIds, setSubscribedUserIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // "Já inscrito no evento" = inscrito em TODAS as atividades, pois este fluxo
+  // inscreve em todas de uma vez. Marcamos apenas quem já está em todas para não
+  // bloquear alunos parcialmente inscritos (que ainda faltam em alguma atividade).
+  const computeFullySubscribed = async (subs: SubEventResponse[]): Promise<Set<string>> => {
+    if (subs.length === 0) return new Set();
+    const perSubEvent = await Promise.all(
+      subs.map((subEvent) =>
+        subscriptionService.listBySubEvent(subEvent.id).catch(() => [] as SubscriptionResponse[])
+      )
+    );
+    const idSets = perSubEvent.map((list) => new Set(list.map((sub) => sub.userId)));
+    return idSets.reduce<Set<string>>(
+      (acc, set, index) =>
+        index === 0 ? new Set(set) : new Set([...acc].filter((id) => set.has(id))),
+      new Set<string>()
+    );
+  };
 
   useEffect(() => {
     if (!isOpen || !eventId) return;
@@ -37,7 +56,10 @@ const EventSubscriptionManager: React.FC<EventSubscriptionManagerProps> = ({
       try {
         setLoading(true);
         const data = await subEventService.getSubEventsByEventId(eventId);
-        if (active) setSubEvents(data);
+        if (!active) return;
+        setSubEvents(data);
+        const ids = await computeFullySubscribed(data);
+        if (active) setSubscribedUserIds(ids);
       } catch (err: any) {
         if (active) onError?.(err.response?.data?.message || 'Erro ao carregar atividades do evento');
       } finally {
@@ -66,6 +88,10 @@ const EventSubscriptionManager: React.FC<EventSubscriptionManagerProps> = ({
       if (result.notFound > 0) partes.push(`${result.notFound} aluno(s) não encontrado(s)`);
 
       onSuccess?.(partes.join(' · '));
+
+      // Atualiza a marcação de "já inscrito" após as novas inscrições.
+      const ids = await computeFullySubscribed(subEvents);
+      setSubscribedUserIds(ids);
     } catch (err: any) {
       onError?.(err.response?.data?.message || 'Erro ao inscrever alunos no evento');
     } finally {
@@ -128,7 +154,7 @@ const EventSubscriptionManager: React.FC<EventSubscriptionManagerProps> = ({
 
           {subEvents.length > 0 && (
             <BulkStudentPicker
-              subscribedUserIds={new Set()}
+              subscribedUserIds={subscribedUserIds}
               isSubmitting={submitting}
               onSubscribe={handleSubscribe}
               onError={(message) => onError?.(message)}
