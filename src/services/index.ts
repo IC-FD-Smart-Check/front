@@ -12,3 +12,5 @@ export { classGroupService } from './classGroupService';
 export { dashboardService } from './dashboardService';
 export { importService } from './importService';
 export { profileService } from './profileService';
+export { settingsService } from './settingsService';
+

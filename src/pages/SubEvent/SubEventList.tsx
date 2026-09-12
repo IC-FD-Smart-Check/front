@@ -9,7 +9,7 @@ import SubscriptionManager from '@/components/common/SubscriptionManager';
 import ManualAttendanceManager from '@/components/common/ManualAttendanceManager';
 import PageLoader from '@/components/common/PageLoader';
 import Toast from '@/components/common/Toast';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, Plus, Network } from 'lucide-react';
 
 const SubEventList: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
@@ -295,8 +295,18 @@ const SubEventList: React.FC = () => {
               {/* Cabeçalho do card */}
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4 p-4 sm:p-5 border-b border-gray-100">
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-bold text-gray-900 leading-tight">
+                  <h3 className="text-base font-bold text-gray-900 leading-tight flex items-center gap-2 flex-wrap">
                     {subEvent.title}
+                    {/* Mostra de relance quais atividades so aceitam check-in
+                        na rede da instituicao. */}
+                    {subEvent.requireInstitutionNetwork && (
+                      <span
+                        title="Check-in permitido apenas na rede da instituição"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-green-50 text-green-700 border border-green-200"
+                      >
+                        <Network size={11} /> rede exigida
+                      </span>
+                    )}
                   </h3>
                   {subEvent.description && (
                     <p className="text-sm text-gray-500 mt-1 line-clamp-1">

@@ -13,6 +13,7 @@ import Reports from '@/components/check/admin/Reports';
 import Academic from '@/pages/Academic/Academic';
 import StudentImport from '@/pages/Import/StudentImport';
 import Profile from '@/pages/Profile/Profile';
+import Settings from '@/pages/Settings/Settings';
 
 export interface RouteConfig {
   path: string;
@@ -128,6 +129,13 @@ export const routesConfig: RouteConfig[] = [
   {
     path: '/import',
     component: StudentImport,
+    isPrivate: true,
+    layout: true,
+    roles: ['ADMIN'],
+  },
+  {
+    path: '/settings',
+    component: Settings,
     isPrivate: true,
     layout: true,
     roles: ['ADMIN'],

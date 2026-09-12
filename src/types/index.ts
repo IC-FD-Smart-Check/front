@@ -215,6 +215,8 @@ export interface SubEventRequest {
   checkoutStart: string;
   checkoutEnd: string;
   eventId: string;
+  /** Exigir que o check-in parta de uma rede autorizada. */
+  requireInstitutionNetwork?: boolean;
 }
 
 export interface SubEventResponse {
@@ -231,10 +233,25 @@ export interface SubEventResponse {
   checkinEnd: string;
   checkoutStart: string;
   checkoutEnd: string;
+  requireInstitutionNetwork?: boolean;
   eventId: string;
   eventTitle: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+/** Rede autorizada a fazer check-in: IP exato ou faixa CIDR. */
+export interface AllowedNetwork {
+  id: string;
+  value: string;
+  description?: string;
+  active: boolean;
+  createdAt?: string;
+}
+
+export interface AllowedNetworkRequest {
+  value: string;
+  description?: string;
 }
 
 // QRCode types

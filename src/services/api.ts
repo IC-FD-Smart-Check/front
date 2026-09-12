@@ -57,7 +57,11 @@ api.interceptors.response.use(
       return refreshUserThenGoToFirstAccess().then(() => Promise.reject(error));
     }
 
-    if (error.response?.status === 401 || error.response?.status === 403) {
+    // Só 401 encerra a sessão. O 403 é recusa de uma ação específica — aluno
+    // não inscrito, check-in fora da rede autorizada, endpoint de admin — e
+    // deslogar nesses casos jogava a pessoa para o login em vez de mostrar o
+    // motivo. Quem trata o 403 é a tela que fez a chamada.
+    if (error.response?.status === 401) {
       // Só redireciona se não estiver numa página pública de autenticação
       const currentPath = window.location.pathname;
       const isAuthPage = ['/login', '/forgot-password', '/reset-password'].includes(currentPath);

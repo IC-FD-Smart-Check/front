@@ -11,6 +11,8 @@ import {
 import Button from './Button';
 import Input from './Input';
 import LocationPicker from './LocationPicker';
+import { settingsService } from '@/services';
+import { Network } from 'lucide-react';
 
 interface SubEventFormProps {
   isOpen: boolean;
@@ -43,9 +45,14 @@ const SubEventForm: React.FC<SubEventFormProps> = ({
     checkoutStart: '',
     checkoutEnd: '',
     eventId: parentEvent.id,
+    // Novo subevento nasce exigindo a rede: o caso comum e atividade dentro da
+    // instituicao. Quem faz algo fora do campus desmarca.
+    requireInstitutionNetwork: true,
   });
 
   const [useParentLocation, setUseParentLocation] = useState(false);
+  /** Redes cadastradas: sem nenhuma, o servidor recusa ligar a exigencia. */
+  const [redesAtivas, setRedesAtivas] = useState<number | null>(null);
 
   // Data + horários: o usuário preenche isto; as 4 janelas saem daqui
   const [schedule, setSchedule] = useState({
@@ -157,6 +164,7 @@ const SubEventForm: React.FC<SubEventFormProps> = ({
         checkoutStart: formatDateTimeLocal(subEvent.checkoutStart),
         checkoutEnd: formatDateTimeLocal(subEvent.checkoutEnd),
         eventId: parentEvent.id,
+        requireInstitutionNetwork: subEvent.requireInstitutionNetwork ?? false,
       });
     } else {
       // Reset ao criar novo
@@ -179,6 +187,7 @@ const SubEventForm: React.FC<SubEventFormProps> = ({
         checkoutStart: '',
         checkoutEnd: '',
         eventId: parentEvent.id,
+        requireInstitutionNetwork: true,
       });
     }
     setErrors({});
@@ -203,6 +212,32 @@ const SubEventForm: React.FC<SubEventFormProps> = ({
       }));
     }
   }, [useParentLocation, parentEvent, subEvent]);
+
+  // Sem rede cadastrada a exigencia nao pode ser ligada, e dizer isso aqui e
+  // melhor que deixar o salvamento falhar depois de tudo preenchido.
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelado = false;
+    settingsService
+      .listAllowedNetworks()
+      .then((redes) => {
+        if (!cancelado) setRedesAtivas(redes.filter((r) => r.active).length);
+      })
+      .catch(() => {
+        if (!cancelado) setRedesAtivas(null);
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [isOpen]);
+
+  const semRedeCadastrada = redesAtivas === 0;
+
+  useEffect(() => {
+    if (semRedeCadastrada && formData.requireInstitutionNetwork) {
+      setFormData((prev) => ({ ...prev, requireInstitutionNetwork: false }));
+    }
+  }, [semRedeCadastrada, formData.requireInstitutionNetwork]);
 
   const validate = (): boolean => {
     const newErrors: typeof errors = {};
@@ -296,6 +331,7 @@ const SubEventForm: React.FC<SubEventFormProps> = ({
         checkoutStart: formatToISO(formData.checkoutStart),
         checkoutEnd: formatToISO(formData.checkoutEnd),
         eventId: parentEvent.id,
+        requireInstitutionNetwork: !!formData.requireInstitutionNetwork,
       };
 
       await onSubmit(dataToSend);
@@ -598,6 +634,33 @@ const SubEventForm: React.FC<SubEventFormProps> = ({
                 disabled={isSubmitting}
               />
             )}
+
+            {/* Validação de rede. Fica junto da localização porque responde à
+                mesma pergunta: onde a pessoa precisa estar para marcar. */}
+            <div className="mt-4 flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+              <input
+                type="checkbox"
+                id="requireInstitutionNetwork"
+                checked={!!formData.requireInstitutionNetwork}
+                onChange={(e) => handleChange('requireInstitutionNetwork', e.target.checked)}
+                disabled={isSubmitting || semRedeCadastrada}
+                className="mt-1 w-4 h-4 text-[#B7294A] border-gray-300 rounded focus:ring-[#B7294A] disabled:opacity-50"
+              />
+              <label
+                htmlFor="requireInstitutionNetwork"
+                className={`flex-1 text-sm ${semRedeCadastrada ? 'text-gray-400' : 'text-gray-800 cursor-pointer'}`}
+              >
+                <span className="inline-flex items-center gap-1.5 font-medium">
+                  <Network size={14} className="flex-shrink-0" />
+                  Exigir a rede da instituição para check-in
+                </span>
+                <span className="block text-xs text-gray-500 mt-1">
+                  {semRedeCadastrada
+                    ? 'Cadastre um IP em Configurações para poder exigir a rede.'
+                    : 'Desmarque para atividades fora do campus, onde o aluno usa 4G ou outra rede.'}
+                </span>
+              </label>
+            </div>
 
             {/* Erro de localização/raio exibido junto ao mapa (BUG-005) */}
             {errors.location && (
