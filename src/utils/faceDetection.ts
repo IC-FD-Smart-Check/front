@@ -7,30 +7,46 @@
  * Serve para garantir que a foto mostra um rosto, que é o mínimo para o
  * professor conseguir conferir presença depois.
  *
- * Dois caminhos, nesta ordem:
+ * Caminhos tentados, nesta ordem:
  *
- * 1. FaceDetector nativo, da Shape Detection API. Existe no Chrome do Android
- *    e custa zero download, porque usa o detector do próprio sistema.
- * 2. MediaPipe BlazeFace em WebAssembly, para quem não tem o nativo — iPhone,
- *    basicamente. São cerca de 3 MB comprimidos na primeira vez, depois fica
- *    em cache do navegador.
+ * 1. FaceDetector nativo, da Shape Detection API. Custa download zero, mas só
+ *    existe em parte dos navegadores e, onde existe, nem sempre funciona de
+ *    verdade — por isso passa por um autoteste antes de ser aceito.
+ * 2. MediaPipe BlazeFace em WebAssembly, primeiro tentando GPU e depois CPU.
+ *    A troca para CPU importa: em vários celulares o delegado de GPU falha na
+ *    criação, e sem esta segunda tentativa a verificação sumiria justamente
+ *    nos aparelhos que mais precisam dela.
  *
- * Se nenhum dos dois carregar, o detector se declara indisponível e a tela de
- * captura libera a foto sem checagem. Travar o check-in de uma turma por causa
- * de um arquivo que não baixou seria pior que aceitar uma foto ruim.
+ * Se nada funcionar, o detector se declara indisponível e a tela de captura
+ * libera a foto sem checagem. Travar o check-in de uma turma por causa de um
+ * arquivo que não baixou seria pior que aceitar uma foto ruim.
  */
 
 /** Onde o prebuild deixa o runtime e o modelo. */
 const BASE_PATH = '/face';
 
-export type FaceDetectorStatus = 'carregando' | 'pronto' | 'indisponivel';
-
 export interface FaceDetector {
   /** true se há pelo menos um rosto no quadro. */
   detect: (source: HTMLVideoElement) => Promise<boolean>;
   close: () => void;
-  /** Qual caminho foi usado, para o log de diagnóstico. */
-  engine: 'nativo' | 'mediapipe';
+  /** Qual caminho foi usado, para o diagnóstico. */
+  engine: string;
+}
+
+/**
+ * Registro do que aconteceu na montagem, para o modo de diagnóstico da tela
+ * de captura. Sem isto, um aparelho que falha não tem como contar por quê.
+ */
+export const faceDetectionLog: string[] = [];
+
+function registrar(mensagem: string) {
+  faceDetectionLog.push(mensagem);
+  console.info(`[face] ${mensagem}`);
+}
+
+function descreverErro(erro: unknown): string {
+  if (erro instanceof Error) return `${erro.name}: ${erro.message}`;
+  return String(erro);
 }
 
 interface NativeFaceDetector {
@@ -44,56 +60,80 @@ declare global {
 }
 
 /**
- * O nativo é instantâneo, então vale tentar primeiro mesmo sabendo que boa
- * parte dos aparelhos não tem.
+ * O nativo é instantâneo, mas há navegadores que expõem o construtor e falham
+ * na primeira detecção. Uma chamada de teste num quadro em branco separa os
+ * dois casos: o que importa é não lançar, e não o resultado.
  */
-function criarNativo(): FaceDetector | null {
+async function criarNativo(): Promise<FaceDetector | null> {
   if (typeof window === 'undefined' || !window.FaceDetector) {
+    registrar('sem FaceDetector nativo neste navegador');
     return null;
   }
   try {
     const detector = new window.FaceDetector({ maxDetectedFaces: 1, fastMode: true });
+
+    const teste = document.createElement('canvas');
+    teste.width = 64;
+    teste.height = 64;
+    await detector.detect(teste);
+
+    registrar('usando o detector nativo do navegador');
     return {
       engine: 'nativo',
-      detect: async (source) => {
-        const faces = await detector.detect(source);
-        return faces.length > 0;
-      },
+      detect: async (source) => (await detector.detect(source)).length > 0,
       close: () => {},
     };
-  } catch {
-    // Alguns navegadores expõem o construtor e falham ao instanciar.
+  } catch (erro) {
+    registrar(`detector nativo recusado: ${descreverErro(erro)}`);
     return null;
   }
 }
 
 async function criarMediapipe(): Promise<FaceDetector | null> {
+  let FilesetResolver;
+  let MpFaceDetector;
   try {
-    // Import dinâmico: quem tem detector nativo nunca baixa este pedaço.
-    const { FilesetResolver, FaceDetector: MpFaceDetector } = await import('@mediapipe/tasks-vision');
-
-    const fileset = await FilesetResolver.forVisionTasks(BASE_PATH);
-    const detector = await MpFaceDetector.createFromOptions(fileset, {
-      baseOptions: {
-        modelAssetPath: `${BASE_PATH}/blaze_face_short_range.tflite`,
-        delegate: 'GPU',
-      },
-      runningMode: 'VIDEO',
-      minDetectionConfidence: 0.5,
-    });
-
-    return {
-      engine: 'mediapipe',
-      detect: async (source) => {
-        const resultado = detector.detectForVideo(source, performance.now());
-        return resultado.detections.length > 0;
-      },
-      close: () => detector.close(),
-    };
+    // Import dinâmico: quem já resolveu no nativo nunca baixa este pedaço.
+    ({ FilesetResolver, FaceDetector: MpFaceDetector } = await import('@mediapipe/tasks-vision'));
   } catch (erro) {
-    console.warn('[face] MediaPipe indisponível, captura segue sem checagem', erro);
+    registrar(`falha ao carregar o pacote do MediaPipe: ${descreverErro(erro)}`);
     return null;
   }
+
+  let fileset;
+  try {
+    fileset = await FilesetResolver.forVisionTasks(BASE_PATH);
+  } catch (erro) {
+    registrar(`falha ao carregar o runtime WebAssembly: ${descreverErro(erro)}`);
+    return null;
+  }
+
+  // GPU primeiro por ser mais rápido; CPU como segunda chance, porque em
+  // muitos celulares só o delegado de CPU inicializa.
+  for (const delegate of ['GPU', 'CPU'] as const) {
+    try {
+      const detector = await MpFaceDetector.createFromOptions(fileset, {
+        baseOptions: {
+          modelAssetPath: `${BASE_PATH}/blaze_face_short_range.tflite`,
+          delegate,
+        },
+        runningMode: 'VIDEO',
+        minDetectionConfidence: 0.5,
+      });
+
+      registrar(`usando MediaPipe com delegado ${delegate}`);
+      return {
+        engine: `mediapipe/${delegate}`,
+        detect: async (source) =>
+          detector.detectForVideo(source, performance.now()).detections.length > 0,
+        close: () => detector.close(),
+      };
+    } catch (erro) {
+      registrar(`MediaPipe ${delegate} falhou: ${descreverErro(erro)}`);
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -101,20 +141,21 @@ async function criarMediapipe(): Promise<FaceDetector | null> {
  * nenhum, e quem chama trata como "sem checagem".
  */
 export async function criarFaceDetector(): Promise<FaceDetector | null> {
+  faceDetectionLog.length = 0;
   const inicio = performance.now();
 
-  const nativo = criarNativo();
+  const nativo = await criarNativo();
   if (nativo) {
-    console.info(`[face] detector nativo pronto em ${Math.round(performance.now() - inicio)} ms`);
+    registrar(`pronto em ${Math.round(performance.now() - inicio)} ms`);
     return nativo;
   }
 
   const mediapipe = await criarMediapipe();
   if (mediapipe) {
-    console.info(`[face] MediaPipe pronto em ${Math.round(performance.now() - inicio)} ms`);
+    registrar(`pronto em ${Math.round(performance.now() - inicio)} ms`);
     return mediapipe;
   }
 
-  console.info('[face] nenhum detector disponível; foto liberada sem checagem');
+  registrar('nenhum detector disponível; foto liberada sem checagem');
   return null;
 }
