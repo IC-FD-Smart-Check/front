@@ -1,7 +1,7 @@
 // src/components/check/student/SelfieCapture.tsx
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Camera, X, RefreshCw, ScanFace } from 'lucide-react';
-import { criarFaceDetector, faceDetectionLog, type FaceDetector } from '@/utils/faceDetection';
+import { criarFaceDetector, type FaceDetector } from '@/utils/faceDetection';
 
 interface SelfieCaptureProps {
   onCapture: (photoBase64: string) => void;
@@ -46,27 +46,6 @@ const SelfieCapture: React.FC<SelfieCaptureProps> = ({
    * bloqueia o botão, e isso exige um detector funcionando.
    */
   const [rostoDetectado, setRostoDetectado] = useState<boolean | null>(null);
-
-  /**
-   * Painel de diagnóstico, ligado por ?facedebug=1 na URL. Existe porque a
-   * detecção depende do aparelho: um celular pode não ter caminho nenhum, e
-   * sem isto não haveria como saber o motivo sem plugar o telefone no
-   * computador. Invisível para o aluno.
-   */
-  const [debug, setDebug] = useState<string[]>([]);
-  // Guarda na sessão: o parâmetro entra na URL uma vez e sobrevive à navegação
-  // interna até a captura, que é onde o painel aparece.
-  const mostrarDebug = (() => {
-    if (typeof window === 'undefined') return false;
-    try {
-      if (new URLSearchParams(window.location.search).has('facedebug')) {
-        sessionStorage.setItem('facedebug', '1');
-      }
-      return sessionStorage.getItem('facedebug') === '1';
-    } catch {
-      return new URLSearchParams(window.location.search).has('facedebug');
-    }
-  })();
 
   const stopStream = () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -136,7 +115,6 @@ const SelfieCapture: React.FC<SelfieCaptureProps> = ({
       }
       detectorRef.current = detector;
       if (detector) setRostoDetectado(false);
-      setDebug([...faceDetectionLog]);
     });
 
     // Liberar o stream ao sair é obrigatório: o iOS não devolve a câmera
@@ -195,9 +173,9 @@ const SelfieCapture: React.FC<SelfieCaptureProps> = ({
       } catch (erro) {
         // Detector quebrou no meio do caminho: desliga a checagem em vez de
         // deixar o aluno preso com o botão inativo.
+        console.warn('[face] análise falhou, seguindo sem checagem', erro);
         detectorRef.current = null;
         setRostoDetectado(null);
-        setDebug((anterior) => [...anterior, `falhou durante a análise: ${String(erro)}`]);
       } finally {
         analisando = false;
       }
@@ -295,19 +273,6 @@ const SelfieCapture: React.FC<SelfieCaptureProps> = ({
           </div>
         )}
       </div>
-
-      {mostrarDebug && (
-        <div className="px-4 pt-3 text-[11px] leading-snug text-gray-600 bg-gray-50 border-t border-gray-100">
-          <p className="font-semibold text-gray-800">
-            Diagnóstico: {rostoDetectado === null ? 'sem verificação' : 'verificação ativa'}
-          </p>
-          <ul className="list-disc pl-4 mt-1 space-y-0.5">
-            {debug.map((linha, i) => (
-              <li key={i} className="break-words">{linha}</li>
-            ))}
-          </ul>
-        </div>
-      )}
 
       <div className="p-4 flex gap-3">
         {preview ? (

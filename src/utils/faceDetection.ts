@@ -34,13 +34,11 @@ export interface FaceDetector {
 }
 
 /**
- * Registro do que aconteceu na montagem, para o modo de diagnóstico da tela
- * de captura. Sem isto, um aparelho que falha não tem como contar por quê.
+ * As mensagens vão para o console e não para a tela: qual caminho funcionou,
+ * e por que os outros não, é informação de quem mantém o sistema, não do
+ * aluno que está marcando presença.
  */
-export const faceDetectionLog: string[] = [];
-
 function registrar(mensagem: string) {
-  faceDetectionLog.push(mensagem);
   console.info(`[face] ${mensagem}`);
 }
 
@@ -141,7 +139,6 @@ async function criarMediapipe(): Promise<FaceDetector | null> {
  * nenhum, e quem chama trata como "sem checagem".
  */
 export async function criarFaceDetector(): Promise<FaceDetector | null> {
-  faceDetectionLog.length = 0;
   const inicio = performance.now();
 
   const nativo = await criarNativo();
