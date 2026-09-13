@@ -1,6 +1,7 @@
 // src/components/check/student/SelfieCapture.tsx
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Camera, X, RefreshCw } from 'lucide-react';
+import { Camera, X, RefreshCw, ScanFace } from 'lucide-react';
+import { criarFaceDetector, type FaceDetector } from '@/utils/faceDetection';
 
 interface SelfieCaptureProps {
   onCapture: (photoBase64: string) => void;
@@ -15,6 +16,16 @@ interface SelfieCaptureProps {
 const MAX_DIMENSION = 480;
 const JPEG_QUALITY = 0.5;
 
+// A pergunta é só "tem um rosto enquadrado", e isso não muda dez vezes por
+// segundo. A 4 análises por segundo a reação continua imediata para quem está
+// se enquadrando, e o processador do celular fica praticamente livre.
+const DETECTION_INTERVAL_MS = 250;
+
+// Um quadro isolado sem rosto acontece a toda hora: piscada, movimento, mão na
+// frente. Só some a liberação depois de alguns quadros seguidos sem rosto,
+// senão o botão piscaria entre ativo e inativo.
+const FRAMES_SEM_ROSTO_PARA_BLOQUEAR = 3;
+
 const SelfieCapture: React.FC<SelfieCaptureProps> = ({
   onCapture,
   onCancel,
@@ -27,9 +38,25 @@ const SelfieCapture: React.FC<SelfieCaptureProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
+  const detectorRef = useRef<FaceDetector | null>(null);
+  const loopRef = useRef<number | null>(null);
+  const semRostoRef = useRef(0);
+  /**
+   * null = sem checagem disponível, e nesse caso a foto é liberada. Só false
+   * bloqueia o botão, e isso exige um detector funcionando.
+   */
+  const [rostoDetectado, setRostoDetectado] = useState<boolean | null>(null);
+
   const stopStream = () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
+  };
+
+  const pararDeteccao = () => {
+    if (loopRef.current !== null) {
+      window.clearInterval(loopRef.current);
+      loopRef.current = null;
+    }
   };
 
   const cancelledRef = useRef(false);
@@ -79,13 +106,82 @@ const SelfieCapture: React.FC<SelfieCaptureProps> = ({
     cancelledRef.current = false;
     start();
 
+    // Carrega o detector em paralelo à permissão e ao aquecimento do sensor,
+    // que é tempo que o aluno já espera de qualquer forma.
+    criarFaceDetector().then((detector) => {
+      if (cancelledRef.current) {
+        detector?.close();
+        return;
+      }
+      detectorRef.current = detector;
+      if (detector) setRostoDetectado(false);
+    });
+
     // Liberar o stream ao sair é obrigatório: o iOS não devolve a câmera
     // sozinho, e a próxima leitura de QR abriria com a câmera ocupada.
     return () => {
       cancelledRef.current = true;
+      pararDeteccao();
       stopStream();
+      detectorRef.current?.close();
+      detectorRef.current = null;
     };
   }, [start]);
+
+  // Laço de análise: só roda com a câmera aberta e antes da foto sair.
+  useEffect(() => {
+    if (!ready || preview) {
+      pararDeteccao();
+      return;
+    }
+
+    let analisando = false;
+    let somaMs = 0;
+    let amostras = 0;
+
+    loopRef.current = window.setInterval(async () => {
+      const detector = detectorRef.current;
+      const video = videoRef.current;
+      // Pula o ciclo se o anterior ainda não terminou: em aparelho lento isso
+      // evita empilhar análises e travar a interface.
+      if (!detector || !video || analisando || video.readyState < 2) return;
+
+      analisando = true;
+      const inicio = performance.now();
+      try {
+        const achou = await detector.detect(video);
+
+        somaMs += performance.now() - inicio;
+        amostras += 1;
+        if (amostras === 20) {
+          console.info(
+            `[face] ${detector.engine}: ${Math.round(somaMs / amostras)} ms por análise`,
+          );
+          somaMs = 0;
+          amostras = 0;
+        }
+
+        if (achou) {
+          semRostoRef.current = 0;
+          setRostoDetectado(true);
+        } else {
+          semRostoRef.current += 1;
+          if (semRostoRef.current >= FRAMES_SEM_ROSTO_PARA_BLOQUEAR) {
+            setRostoDetectado(false);
+          }
+        }
+      } catch {
+        // Detector quebrou no meio do caminho: desliga a checagem em vez de
+        // deixar o aluno preso com o botão inativo.
+        detectorRef.current = null;
+        setRostoDetectado(null);
+      } finally {
+        analisando = false;
+      }
+    }, DETECTION_INTERVAL_MS);
+
+    return pararDeteccao;
+  }, [ready, preview]);
 
   const capture = () => {
     const video = videoRef.current;
@@ -108,6 +204,7 @@ const SelfieCapture: React.FC<SelfieCaptureProps> = ({
     // Reduzir aqui, e não no servidor: reencodar imagem custa 50-200ms de CPU
     // por foto, e a 10 fotos por segundo isso consumiria mais de um core.
     setPreview(canvas.toDataURL('image/jpeg', JPEG_QUALITY));
+    pararDeteccao();
     stopStream();
     setReady(false);
   };
@@ -115,6 +212,8 @@ const SelfieCapture: React.FC<SelfieCaptureProps> = ({
   const retake = () => {
     setPreview(null);
     setError(null);
+    semRostoRef.current = 0;
+    if (detectorRef.current) setRostoDetectado(false);
     start();
   };
 
@@ -161,6 +260,17 @@ const SelfieCapture: React.FC<SelfieCaptureProps> = ({
             className="w-full h-full object-cover scale-x-[-1]"
           />
         )}
+
+        {/* Dica de enquadramento. Só aparece com detector funcionando e
+            enquanto não há rosto: quem já está enquadrado não precisa ler
+            nada. */}
+        {!preview && ready && rostoDetectado === false && (
+          <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/70 to-transparent">
+            <p className="flex items-center justify-center gap-2 text-white text-sm font-medium">
+              <ScanFace size={18} /> Enquadre seu rosto
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="p-4 flex gap-3">
@@ -184,10 +294,18 @@ const SelfieCapture: React.FC<SelfieCaptureProps> = ({
         ) : (
           <button
             onClick={capture}
-            disabled={!ready}
+            // rostoDetectado === null significa sem checagem disponível, e aí
+            // a foto é liberada: detector que não carregou não pode impedir o
+            // aluno de marcar presença.
+            disabled={!ready || rostoDetectado === false}
             className="w-full px-4 py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            <Camera size={18} /> {ready ? 'Tirar foto' : 'Abrindo câmera...'}
+            {rostoDetectado === false ? <ScanFace size={18} /> : <Camera size={18} />}
+            {!ready
+              ? 'Abrindo câmera...'
+              : rostoDetectado === false
+                ? 'Enquadre seu rosto'
+                : 'Tirar foto'}
           </button>
         )}
       </div>

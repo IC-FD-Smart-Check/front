@@ -25,3 +25,6 @@ dist-ssr
 
 .env
 .history/
+# Runtime do MediaPipe: copiado do node_modules no prebuild (mais de 20 MB)
+public/face/*.wasm
+public/face/vision_wasm*.js

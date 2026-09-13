@@ -8,9 +8,12 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "typecheck": "tsc -p tsconfig.app.json --noEmit"
+    "typecheck": "tsc -p tsconfig.app.json --noEmit",
+    "prebuild": "node scripts/copyMediapipe.mjs",
+    "predev": "node scripts/copyMediapipe.mjs"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "^1.0.1",
     "@types/react-router-dom": "^5.3.3",
     "axios": "^1.13.2",
     "crypto-js": "^4.2.0",
