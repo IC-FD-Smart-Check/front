@@ -56,7 +56,6 @@ export interface ResetPasswordRequest {
 
 /** Senha provisória gerada pelo admin. Exibida uma única vez. */
 export interface AdminPasswordResetResponse {
-  userId: string;
   userName: string;
   temporaryPassword: string;
   message: string;
@@ -167,7 +166,6 @@ export interface ImportClassGroup {
 }
 
 export interface StudentImportResponse {
-  templateId: string;
   templateName: string;
   /** false = preview (nada gravado), true = importação efetivada */
   executed: boolean;
@@ -252,7 +250,6 @@ export interface SubEventResponse {
   checkoutStart: string;
   checkoutEnd: string;
   requireInstitutionNetwork?: boolean;
-  eventId: string;
   eventTitle: string;
   createdAt?: string;
   updatedAt?: string;
@@ -276,7 +273,6 @@ export interface AllowedNetworkRequest {
 export interface QRCodeResponse {
   id: string;
   codeData: string;
-  subEventId: string;
   subEventTitle: string;
   isActive: boolean;
   createdAt: string;
@@ -308,6 +304,8 @@ export interface CheckResponse {
   subEventTitle: string;
   userId: string;
   userName: string;
+  /** RA do aluno; ausente para admin. */
+  userRa?: string | null;
   type: 'CHECKIN' | 'CHECKOUT';
   checkinTime: string | null;
   checkoutTime: string | null;
@@ -344,12 +342,10 @@ export interface AttendanceEntry {
 // CHECK INFO (QR CODE VALIDATION)
 export interface CheckInfoResponse {
   // Evento
-  eventId: string;
   eventTitle: string;
   eventDescription: string;
   
   // SubEvento
-  subEventId: string;
   subEventTitle: string;
   subEventDescription: string;
   locationDescription: string;
@@ -399,7 +395,6 @@ export interface BulkSubscriptionResponse {
 }
 
 export interface SubscriptionResponse {
-  id: string;
   userId: string;
   userName: string;
   userEmail?: string;

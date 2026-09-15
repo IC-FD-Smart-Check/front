@@ -19,7 +19,9 @@ const CheckCards: React.FC<CheckCardsProps> = ({ records }) => {
             <div className="flex justify-between items-start mb-3">
               <div className="flex-1">
                 <p className="font-medium text-gray-900">{record.userName}</p>
-                <p className="text-sm text-gray-500">{record.userId}</p>
+                <p className="text-sm text-gray-500">
+                  {record.userRa ? `RA ${record.userRa}` : '—'}
+                </p>
               </div>
             </div>
 

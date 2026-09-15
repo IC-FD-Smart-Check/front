@@ -231,7 +231,7 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
                   ) : (
                     <ul className="divide-y divide-gray-100">
                       {filteredSubscriptions.map(sub => (
-                        <li key={sub.id} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50">
+                        <li key={sub.userId} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50">
                           <input
                             type="checkbox"
                             checked={selectedToRemove.has(sub.userId)}

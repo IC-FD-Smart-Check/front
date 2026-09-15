@@ -41,7 +41,9 @@ const CheckTable: React.FC<CheckTableProps> = ({ records }) => {
                 <td className="px-6 py-4">
                   <div>
                     <p className="font-medium text-gray-900">{record.userName}</p>
-                    <p className="text-sm text-gray-500">{record.userId}</p>
+                    <p className="text-sm text-gray-500">
+                      {record.userRa ? `RA ${record.userRa}` : '—'}
+                    </p>
                   </div>
                 </td>
 
