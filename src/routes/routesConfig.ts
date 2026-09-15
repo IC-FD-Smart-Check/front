@@ -14,6 +14,7 @@ import Academic from '@/pages/Academic/Academic';
 import StudentImport from '@/pages/Import/StudentImport';
 import Profile from '@/pages/Profile/Profile';
 import Settings from '@/pages/Settings/Settings';
+import Terms from '@/pages/Terms/Terms';
 
 export interface RouteConfig {
   path: string;
@@ -139,6 +140,14 @@ export const routesConfig: RouteConfig[] = [
     isPrivate: true,
     layout: true,
     roles: ['ADMIN'],
+  },
+  {
+    // Aberto a todos: quem aceitou precisa poder reler.
+    path: '/termos',
+    component: Terms,
+    isPrivate: true,
+    layout: true,
+    roles: ['STUDENT', 'ADMIN'],
   },
 
   // Rotas que serão adicionadas futuramente

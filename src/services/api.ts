@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { isFirstAccessPending } from '@/utils/firstAccess';
 
 const api = axios.create({
   baseURL: (import.meta.env?.VITE_API_URL as string) || 'http://localhost:8080/api',
@@ -27,13 +28,10 @@ const api = axios.create({
  * (uma das poucas rotas liberadas durante a pendência). Se mesmo assim o
  * servidor e o storage discordarem, a sessão é encerrada para quebrar o ciclo.
  */
-const FIRST_ACCESS_PENDING = (u: { mustChangePassword?: boolean; email?: string | null }) =>
-  !!u.mustChangePassword || !u.email;
-
 async function refreshUserThenGoToFirstAccess(): Promise<void> {
   try {
     const { data } = await api.get('/me');
-    if (!FIRST_ACCESS_PENDING(data)) {
+    if (!isFirstAccessPending(data)) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';

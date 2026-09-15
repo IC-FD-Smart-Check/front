@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Mail, CheckCircle2, LogOut } from 'lucide-react';
+import { Lock, Mail, CheckCircle2, LogOut, FileText } from 'lucide-react';
 import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
 import Logo from '@/components/common/Logo';
-import { profileService } from '@/services';
+import { profileService, termsService } from '@/services';
+import TermsContent from '@/components/common/TermsContent';
+import type { TermsDocument } from '@/types';
+import { termsPending } from '@/utils/firstAccess';
 import { useAuthStore } from '@/store/authStore';
 
 /**
- * Primeiro acesso: troca de senha e cadastro de e-mail, ambos obrigatórios.
+ * Primeiro acesso: aceite dos termos, troca de senha e cadastro de e-mail.
  *
  * Não tem "agora não". Enquanto isto não for concluído, o backend responde
  * 428 em todo o resto do sistema — a tela só reflete a regra que já vale no
@@ -21,6 +24,8 @@ const FirstAccess: React.FC = () => {
 
   const precisaSenha = !!user?.mustChangePassword;
   const precisaEmail = !user?.email;
+  // Mesma regra que a rota protegida e o interceptor usam, de uma fonte só.
+  const precisaTermos = !!user && termsPending(user);
 
   // O `user` do storage pode ser de antes do deploy e não trazer a pendência
   // real. /me é liberado durante o primeiro acesso, então vale a fonte oficial.
@@ -33,10 +38,17 @@ const FirstAccess: React.FC = () => {
   const [senhaNova, setSenhaNova] = useState('');
   const [confirmacao, setConfirmacao] = useState('');
   const [email, setEmail] = useState('');
+  const [aceitou, setAceitou] = useState(false);
+  // Versão que estava na tela no momento do aceite; o servidor confere.
+  const [versaoLida, setVersaoLida] = useState<string | null>(null);
   const [erro, setErro] = useState('');
   const [salvando, setSalvando] = useState(false);
 
   const validar = (): string | null => {
+    if (precisaTermos) {
+      if (!versaoLida) return 'Aguarde os termos carregarem';
+      if (!aceitou) return 'É necessário aceitar os termos de uso para continuar';
+    }
     if (precisaSenha) {
       if (!senhaAtual) return 'Informe a senha atual';
       if (senhaNova.length < 6) return 'A nova senha deve ter no mínimo 6 caracteres';
@@ -65,8 +77,15 @@ const FirstAccess: React.FC = () => {
     try {
       let atualizado = { ...user };
 
-      // E-mail primeiro: se a senha falhar depois, o e-mail já ficou salvo e
-      // o usuário não precisa digitá-lo de novo.
+      // Termos primeiro: é o registro que precisa existir antes de qualquer
+      // uso do sistema, e é o passo que não depende de nada digitado.
+      if (precisaTermos && versaoLida) {
+        const perfil = await termsService.accept(versaoLida);
+        atualizado = { ...atualizado, acceptedTermsVersion: perfil.acceptedTermsVersion };
+      }
+
+      // E-mail depois: se a senha falhar em seguida, o e-mail já ficou salvo
+      // e o usuário não precisa digitá-lo de novo.
       if (precisaEmail) {
         const perfil = await profileService.updateEmail(email.trim());
         atualizado = { ...atualizado, email: perfil.email };
@@ -86,7 +105,7 @@ const FirstAccess: React.FC = () => {
   };
 
   // Nada pendente: não há o que fazer aqui.
-  if (user && !precisaSenha && !precisaEmail) {
+  if (user && !precisaSenha && !precisaEmail && !precisaTermos) {
     navigate('/home', { replace: true });
     return null;
   }
@@ -104,11 +123,14 @@ const FirstAccess: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Primeiro acesso</h2>
           <p className="text-sm text-gray-600">
             Olá, {user?.name?.split(' ')[0]}. Antes de continuar, precisamos de{' '}
-            {precisaSenha && precisaEmail
-              ? 'uma nova senha e do seu e-mail'
-              : precisaSenha
-              ? 'uma nova senha'
-              : 'seu e-mail'}
+            {[
+              precisaTermos && 'do seu aceite aos termos de uso',
+              precisaSenha && 'de uma nova senha',
+              precisaEmail && 'do seu e-mail',
+            ]
+              .filter(Boolean)
+              .join(', ')
+              .replace(/,([^,]*)$/, ' e$1')}
             .
           </p>
         </div>
@@ -116,6 +138,40 @@ const FirstAccess: React.FC = () => {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {erro && (
             <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm">{erro}</div>
+          )}
+
+          {precisaTermos && (
+            <fieldset className="flex flex-col gap-2">
+              <legend className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
+                Termos de uso
+              </legend>
+
+              {/* Rolagem própria: o texto é longo e não pode empurrar os
+                  campos para fora da tela no celular. */}
+              <div className="max-h-56 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
+                <TermsContent onLoad={(doc: TermsDocument) => setVersaoLida(doc.version)} />
+              </div>
+
+              <label className="flex items-start gap-2.5 mt-1 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={aceitou}
+                  onChange={(e) => { setAceitou(e.target.checked); setErro(''); }}
+                  disabled={salvando || !versaoLida}
+                  className="mt-0.5 w-4 h-4 text-[#B7294A] border-gray-300 rounded focus:ring-[#B7294A]"
+                />
+                <span className="text-sm text-gray-800">
+                  <span className="inline-flex items-center gap-1.5 font-medium">
+                    <FileText size={14} className="flex-shrink-0" />
+                    Li e aceito os termos de uso
+                  </span>
+                  <span className="block text-xs text-gray-500 mt-0.5">
+                    Inclui o aviso sobre a foto, a localização e o endereço de rede registrados
+                    a cada check-in.
+                  </span>
+                </span>
+              </label>
+            </fieldset>
           )}
 
           {precisaSenha && (

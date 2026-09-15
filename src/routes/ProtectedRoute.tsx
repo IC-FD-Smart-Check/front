@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks';
 import Layout from '@/components/layout/Layout';
+import { isFirstAccessPending } from '@/utils/firstAccess';
 import type { RouteConfig } from './routesConfig';
 
 interface ProtectedRouteProps {
@@ -20,7 +21,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ config }) => {
   // Primeiro acesso pendente (senha provisória ou sem e-mail): nada além da
   // própria tela de primeiro acesso. Não é opcional — o backend responde 428
   // no resto do sistema; aqui só evitamos a ida e volta.
-  const firstAccessPending = !!user && (!!user.mustChangePassword || !user.email);
+  const firstAccessPending = !!user && isFirstAccessPending(user);
   if (isPrivate && firstAccessPending && config.path !== '/first-access') {
     return <Navigate to="/first-access" replace />;
   }

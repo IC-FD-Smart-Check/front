@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Calendar, QrCode, Users, LogOut, BarChart, Menu, X, GraduationCap, Upload, Settings } from 'lucide-react';
+import { Home, Calendar, QrCode, Users, LogOut, BarChart, Menu, X, GraduationCap, Upload, Settings, FileText } from 'lucide-react';
 import { useAuth } from '@/hooks';
 import Logo from '../common/Logo';
 
@@ -44,6 +44,7 @@ const Sidebar: React.FC = () => {
     { path: '/users', label: 'Usuários', icon: Users, roles: ['ADMIN'] },
     { path: '/import', label: 'Importar Alunos', icon: Upload, roles: ['ADMIN'] },
     { path: '/settings', label: 'Configurações', icon: Settings, roles: ['ADMIN'] },
+    { path: '/termos', label: 'Termos de uso', icon: FileText, roles: ['STUDENT', 'ADMIN'] },
   ];
 
   const filteredMenuItems = menuItems.filter((item) =>

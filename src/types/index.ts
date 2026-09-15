@@ -1,3 +1,15 @@
+/** Termos de uso, servidos pelo backend junto com a versão vigente. */
+export interface TermsSection {
+  title: string;
+  paragraphs: string[];
+}
+
+export interface TermsDocument {
+  version: string;
+  updatedAt: string;
+  sections: TermsSection[];
+}
+
 export interface User {
   id: string;
   email?: string;
@@ -6,6 +18,9 @@ export interface User {
   role: 'STUDENT' | 'ADMIN';
   /** Senha provisória: precisa trocar antes de usar o sistema. */
   mustChangePassword?: boolean;
+  /** Versão dos termos já aceita, e a que está valendo hoje. */
+  acceptedTermsVersion?: string | null;
+  currentTermsVersion?: string;
   // Turma do aluno (ausente para ADMIN)
   classGroupId?: string | null;
   classGroupName?: string | null;
@@ -69,6 +84,9 @@ export interface UserResponse {
   semester?: Semester | null;
   courseId?: string | null;
   courseName?: string | null;
+  mustChangePassword?: boolean;
+  acceptedTermsVersion?: string | null;
+  currentTermsVersion?: string;
   createdAt?: string;
   updatedAt?: string;
 }
