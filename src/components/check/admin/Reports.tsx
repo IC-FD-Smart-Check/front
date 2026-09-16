@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useToast } from '@/hooks/useToast';
 import { eventService } from '@/services/eventService';
 import { subEventService } from '@/services/subEventService';
@@ -20,6 +20,7 @@ import {
   Loader2,
   Eye,
   ArrowLeft,
+  RefreshCw,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -31,6 +32,17 @@ interface OpcaoExportacao {
   formato: 'PDF' | 'EXCEL' | 'ZIP';
   executar: () => Promise<void>;
 }
+
+/**
+ * Rota em que o navegador entrou, capturada no carregamento da pagina.
+ *
+ * Serve para separar dois casos que parecem iguais dentro do componente:
+ * recarregar a tela de relatorios, quando faz sentido voltar ao evento que
+ * estava aberto, e chegar aqui pelo menu lateral, quando a tela deve comecar
+ * limpa.
+ */
+const ROTA_DE_ENTRADA = typeof window !== 'undefined' ? window.location.pathname : '';
+let primeiraMontagem = true;
 
 interface Student {
   id: string;
@@ -169,9 +181,78 @@ export default function Reports() {
   const [templates, setTemplates] = useState<ReportTemplate[]>([]);
   const [modeloId, setModeloId] = useState('');
 
+  // Atualizacao sem recarregar a pagina: repuxa so a presenca, mantendo a
+  // selecao, os filtros e a posicao da rolagem.
+  const [atualizando, setAtualizando] = useState(false);
+  const [atualizadoEm, setAtualizadoEm] = useState<Date | null>(null);
+
+  /**
+   * Subevento guardado que ainda nao pode ser aplicado: trocar de evento
+   * limpa a selecao de subevento, entao a restauracao so acontece depois que
+   * a lista de subeventos chega.
+   */
+  const subeventoPendente = useRef<string | null>(null);
+
+  /**
+   * Chave da selecao guardada. Recarregar a pagina no meio de um evento
+   * perdia evento e subevento, e reencontra-los no seletor a cada vez
+   * atrapalhava justamente quem esta acompanhando check-in ao vivo.
+   */
+  const SELECAO_SALVA = 'relatorios:selecao';
+
   useEffect(() => {
     loadEvents();
   }, []);
+
+  /**
+   * Restaurar so faz sentido quando a pessoa recarregou esta tela. Vindo do
+   * menu lateral, ela esta comecando uma consulta nova, e reabrir o ultimo
+   * evento obrigaria a desfazer a selecao antes de qualquer coisa.
+   */
+  const [restaurarSelecao] = useState(() => {
+    const recarregouAqui = primeiraMontagem && ROTA_DE_ENTRADA.startsWith('/reports');
+    primeiraMontagem = false;
+    return recarregouAqui;
+  });
+
+  // Restaura o evento assim que a lista chega, e guarda o subevento para
+  // aplicar depois. Ids que nao existem mais sao descartados em silencio.
+  useEffect(() => {
+    if (!restaurarSelecao || events.length === 0 || selectedEventId) return;
+    try {
+      const salvo = JSON.parse(localStorage.getItem(SELECAO_SALVA) || 'null');
+      if (!salvo?.eventId || !events.some((evento) => evento.id === salvo.eventId)) return;
+      subeventoPendente.current = salvo.subEventId ?? null;
+      setSelectedEventId(salvo.eventId);
+    } catch {
+      // Storage indisponivel ou conteudo invalido: segue sem restaurar.
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [events]);
+
+  useEffect(() => {
+    const pendente = subeventoPendente.current;
+    if (!pendente || subeventos.length === 0) return;
+    subeventoPendente.current = null;
+    if (subeventos.some((sub) => sub.id === pendente)) {
+      setSelectedSubeventoId(pendente);
+    }
+  }, [subeventos]);
+
+  useEffect(() => {
+    try {
+      if (selectedEventId) {
+        localStorage.setItem(
+          SELECAO_SALVA,
+          JSON.stringify({ eventId: selectedEventId, subEventId: selectedSubeventoId || null }),
+        );
+      } else {
+        localStorage.removeItem(SELECAO_SALVA);
+      }
+    } catch {
+      // Sem storage a tela funciona igual, so nao lembra a selecao.
+    }
+  }, [selectedEventId, selectedSubeventoId]);
 
   const loadEvents = async () => {
     try {
@@ -271,10 +352,19 @@ export default function Reports() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSubeventoId]);
 
-  const loadStudents = async () => {
+  /**
+   * @param silencioso quando true, nao esvazia a lista nem troca o estado de
+   * carregamento. E o que o botao Atualizar usa: a tabela continua na tela
+   * durante a busca, sem piscar e sem perder a rolagem.
+   */
+  const loadStudents = async (silencioso = false) => {
     try {
-      setLoadingStudents(true);
-      setStudents([]);
+      if (silencioso) {
+        setAtualizando(true);
+      } else {
+        setLoadingStudents(true);
+        setStudents([]);
+      }
 
       const [records, allUsers, subscriptions] = await Promise.all([
         checkService.getEventChecks(selectedEventId),
@@ -329,12 +419,21 @@ export default function Reports() {
       if (processed.length === 0) {
         showToast('Nenhum inscrito ou registro de presença encontrado', 'warning');
       }
+      setAtualizadoEm(new Date());
     } catch (error) {
       showToast('Erro ao carregar dados de presença', 'error');
       console.error(error);
       setSubEventInscritos(0);
     } finally {
       setLoadingStudents(false);
+      setAtualizando(false);
+    }
+  };
+
+  /** Repuxa a presenca mantendo selecao e filtros. */
+  const atualizarPresenca = () => {
+    if (selectedSubeventoId && !atualizando) {
+      loadStudents(true);
     }
   };
 
@@ -694,8 +793,34 @@ export default function Reports() {
                   </h2>
                   <p className="text-xs sm:text-sm text-gray-600 mt-1 break-words">
                     {selectedSubevento?.title}
+                    {atualizadoEm && (
+                      <span className="text-gray-400">
+                        {' · atualizado às '}
+                        {atualizadoEm.toLocaleTimeString('pt-BR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                        })}
+                      </span>
+                    )}
                   </p>
                 </div>
+
+                {/* Acompanhar check-in ao vivo sem recarregar: a tabela fica
+                    na tela durante a busca e os filtros permanecem. */}
+                <button
+                  type="button"
+                  onClick={atualizarPresenca}
+                  disabled={atualizando || loadingStudents}
+                  title="Buscar os check-ins mais recentes"
+                  className="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <RefreshCw size={16} className={atualizando ? 'animate-spin' : ''} />
+                  <span className="hidden sm:inline">
+                    {atualizando ? 'Atualizando...' : 'Atualizar'}
+                  </span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => setFiltersOpen((open) => !open)}
