@@ -149,7 +149,7 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90dvh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90dvh] overflow-hidden flex flex-col">
 
         {/* Header */}
         <div className="sticky top-0 bg-white border-b-2 border-gray-200 px-4 sm:px-8 py-4 sm:py-6 flex items-center justify-between gap-3">
@@ -166,7 +166,7 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-4 sm:py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
 
           {/* Inscrição em massa */}
           <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
@@ -223,7 +223,7 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
                   </span>
                 </div>
 
-                <div className="border border-gray-200 rounded-lg bg-white max-h-[min(26rem,32vh)] overflow-y-auto">
+                <div className="border border-gray-200 rounded-lg bg-white max-h-[min(30rem,40vh)] overflow-y-auto">
                   {filteredSubscriptions.length === 0 ? (
                     <div className="py-8 text-center text-sm text-gray-500">
                       Nenhum inscrito com esse filtro.

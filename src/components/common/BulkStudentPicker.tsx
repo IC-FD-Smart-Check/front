@@ -229,7 +229,7 @@ const BulkStudentPicker: React.FC<BulkStudentPickerProps> = ({
       </div>
 
       {/* Lista */}
-      <div className="border border-gray-200 rounded-lg max-h-[min(26rem,32vh)] overflow-y-auto">
+      <div className="border border-gray-200 rounded-lg max-h-[min(30rem,40vh)] overflow-y-auto">
         {loading ? (
           <PageLoader compact message="Carregando alunos..." />
         ) : filtered.length === 0 ? (
