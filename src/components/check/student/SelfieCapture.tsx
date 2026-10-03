@@ -1,7 +1,24 @@
 // src/components/check/student/SelfieCapture.tsx
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Camera, X, RefreshCw, ScanFace } from 'lucide-react';
-import { criarFaceDetector, type FaceDetector } from '@/utils/faceDetection';
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  Camera,
+  CheckCircle2,
+  RefreshCw,
+  ScanFace,
+  X,
+} from 'lucide-react';
+import { criarFaceDetector, type FaceDetector, type PoseCabeca } from '@/utils/faceDetection';
+import {
+  AJUSTES_PADRAO,
+  criarProvaDeVida,
+  type Direcao,
+  type EstadoProvaDeVida,
+  type ProvaDeVida,
+} from '@/utils/liveness';
 
 interface SelfieCaptureProps {
   onCapture: (photoBase64: string) => void;
@@ -16,15 +33,47 @@ interface SelfieCaptureProps {
 const MAX_DIMENSION = 480;
 const JPEG_QUALITY = 0.5;
 
-// A pergunta é só "tem um rosto enquadrado", e isso não muda dez vezes por
-// segundo. A 4 análises por segundo a reação continua imediata para quem está
-// se enquadrando, e o processador do celular fica praticamente livre.
-const DETECTION_INTERVAL_MS = 250;
+// Seis análises por segundo. Mais rápido que o necessário para "tem rosto",
+// porém a prova de vida precisa reagir ao movimento enquanto ele acontece: a
+// 4 por segundo o aluno gira a cabeça e espera a tela responder. Cada análise
+// custa de 10 a 30 ms, então o processador segue quase livre.
+const DETECTION_INTERVAL_MS = 160;
 
 // Um quadro isolado sem rosto acontece a toda hora: piscada, movimento, mão na
 // frente. Só some a liberação depois de alguns quadros seguidos sem rosto,
 // senão o botão piscaria entre ativo e inativo.
 const FRAMES_SEM_ROSTO_PARA_BLOQUEAR = 3;
+
+// Rosto detectado mas sem pontos utilizáveis por tantas análises seguidas
+// (~4 s) desliga a prova de vida. Sem esta saída, um modelo que devolvesse
+// detecção sem pontos deixaria o aluno preso para sempre na tela da foto,
+// que é pior do que aceitar a foto sem o movimento.
+const ANALISES_SEM_POSE_PARA_DESISTIR = 25;
+
+const SETAS: Record<Direcao, React.ReactNode> = {
+  esquerda: <ArrowLeft size={28} />,
+  direita: <ArrowRight size={28} />,
+  cima: <ArrowUp size={28} />,
+  baixo: <ArrowDown size={28} />,
+};
+
+/**
+ * Diagnóstico ligado por ?facedebug=1, guardado na sessão para sobreviver à
+ * navegação até a captura. Existe porque os limiares da prova de vida foram
+ * estimados pela geometria do rosto e só um aparelho real com uma pessoa real
+ * diz se estão bons. Invisível para o aluno.
+ */
+function diagnosticoLigado(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    if (new URLSearchParams(window.location.search).has('facedebug')) {
+      sessionStorage.setItem('facedebug', '1');
+    }
+    return sessionStorage.getItem('facedebug') === '1';
+  } catch {
+    return new URLSearchParams(window.location.search).has('facedebug');
+  }
+}
 
 const SelfieCapture: React.FC<SelfieCaptureProps> = ({
   onCapture,
@@ -46,6 +95,26 @@ const SelfieCapture: React.FC<SelfieCaptureProps> = ({
    * bloqueia o botão, e isso exige um detector funcionando.
    */
   const [rostoDetectado, setRostoDetectado] = useState<boolean | null>(null);
+
+  const vidaRef = useRef<ProvaDeVida | null>(null);
+  /**
+   * null = prova de vida indisponível neste aparelho. Mesma regra do resto:
+   * o que não carregou não pode impedir o aluno de marcar presença.
+   */
+  const [estadoVida, setEstadoVida] = useState<EstadoProvaDeVida | null>(null);
+
+  /**
+   * A foto sai sozinha no instante em que a prova de vida termina. Estas duas
+   * referências existem por causa disso: a primeira dá ao laço de análise
+   * acesso à versão atual da função de captura, e a segunda impede que dois
+   * ciclos seguidos disparem duas fotos antes de o laço parar.
+   */
+  const capturarRef = useRef<() => void>(() => {});
+  const jaCapturouRef = useRef(false);
+  const semPoseRef = useRef(0);
+
+  const [debug] = useState(diagnosticoLigado);
+  const [pose, setPose] = useState<PoseCabeca | null>(null);
 
   const stopStream = () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -108,13 +177,23 @@ const SelfieCapture: React.FC<SelfieCaptureProps> = ({
 
     // Carrega o detector em paralelo à permissão e ao aquecimento do sensor,
     // que é tempo que o aluno já espera de qualquer forma.
-    criarFaceDetector().then((detector) => {
+    //
+    // exigirPontos ignora o detector nativo: ele não entrega os pontos do
+    // rosto, e sem eles não há como medir movimento. O preço é baixar o
+    // MediaPipe também no Chrome do Android, que antes resolvia sem download.
+    criarFaceDetector({ exigirPontos: true }).then((detector) => {
       if (cancelledRef.current) {
         detector?.close();
         return;
       }
       detectorRef.current = detector;
-      if (detector) setRostoDetectado(false);
+      if (!detector) return;
+
+      setRostoDetectado(false);
+      if (detector.temPontos) {
+        vidaRef.current = criarProvaDeVida();
+        setEstadoVida(vidaRef.current.avaliar({ rosto: false, pose: null }));
+      }
     });
 
     // Liberar o stream ao sair é obrigatório: o iOS não devolve a câmera
@@ -125,6 +204,7 @@ const SelfieCapture: React.FC<SelfieCaptureProps> = ({
       stopStream();
       detectorRef.current?.close();
       detectorRef.current = null;
+      vidaRef.current = null;
     };
   }, [start]);
 
@@ -149,7 +229,7 @@ const SelfieCapture: React.FC<SelfieCaptureProps> = ({
       analisando = true;
       const inicio = performance.now();
       try {
-        const achou = await detector.detect(video);
+        const amostra = await detector.analisar(video);
 
         somaMs += performance.now() - inicio;
         amostras += 1;
@@ -161,7 +241,7 @@ const SelfieCapture: React.FC<SelfieCaptureProps> = ({
           amostras = 0;
         }
 
-        if (achou) {
+        if (amostra.rosto) {
           semRostoRef.current = 0;
           setRostoDetectado(true);
         } else {
@@ -170,23 +250,48 @@ const SelfieCapture: React.FC<SelfieCaptureProps> = ({
             setRostoDetectado(false);
           }
         }
+
+        // Detecta o rosto mas não consegue medir a pose: insistir travaria o
+        // aluno, então a prova de vida sai de cena e vale a checagem simples.
+        if (vidaRef.current && amostra.rosto && !amostra.pose) {
+          semPoseRef.current += 1;
+          if (semPoseRef.current >= ANALISES_SEM_POSE_PARA_DESISTIR) {
+            console.warn('[face] sem pontos do rosto; seguindo sem prova de vida');
+            vidaRef.current = null;
+            setEstadoVida(null);
+          }
+        } else if (amostra.pose) {
+          semPoseRef.current = 0;
+        }
+
+        if (vidaRef.current) {
+          const estado = vidaRef.current.avaliar(amostra);
+          setEstadoVida(estado);
+          // Terminou a sequência de frente para a câmera: é agora, antes que
+          // dê tempo de trocar o que está na frente da lente.
+          if (estado.etapa === 'concluido') capturarRef.current();
+        }
+        if (debug) setPose(amostra.pose);
       } catch (erro) {
         // Detector quebrou no meio do caminho: desliga a checagem em vez de
         // deixar o aluno preso com o botão inativo.
         console.warn('[face] análise falhou, seguindo sem checagem', erro);
         detectorRef.current = null;
+        vidaRef.current = null;
         setRostoDetectado(null);
+        setEstadoVida(null);
       } finally {
         analisando = false;
       }
     }, DETECTION_INTERVAL_MS);
 
     return pararDeteccao;
-  }, [ready, preview]);
+  }, [ready, preview, debug]);
 
   const capture = () => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || jaCapturouRef.current) return;
+    jaCapturouRef.current = true;
 
     const scale = Math.min(1, MAX_DIMENSION / Math.max(video.videoWidth, video.videoHeight));
     const canvas = document.createElement('canvas');
@@ -206,15 +311,26 @@ const SelfieCapture: React.FC<SelfieCaptureProps> = ({
     // por foto, e a 10 fotos por segundo isso consumiria mais de um core.
     setPreview(canvas.toDataURL('image/jpeg', JPEG_QUALITY));
     pararDeteccao();
+
     stopStream();
     setReady(false);
   };
 
+  capturarRef.current = capture;
+
   const retake = () => {
     setPreview(null);
     setError(null);
+    jaCapturouRef.current = false;
     semRostoRef.current = 0;
+    semPoseRef.current = 0;
     if (detectorRef.current) setRostoDetectado(false);
+    // Sequência nova a cada tentativa: repetir a foto não deve repetir os
+    // mesmos movimentos, senão bastaria gravar uma vez.
+    if (vidaRef.current) {
+      vidaRef.current.reiniciar();
+      setEstadoVida(vidaRef.current.avaliar({ rosto: false, pose: null }));
+    }
     start();
   };
 
@@ -231,6 +347,18 @@ const SelfieCapture: React.FC<SelfieCaptureProps> = ({
       </div>
     );
   }
+
+  const vidaPendente = !!estadoVida && estadoVida.etapa !== 'concluido';
+  // Sem prova de vida vale a regra antiga: só o rosto enquadrado.
+  const bloqueado = estadoVida ? vidaPendente : rostoDetectado === false;
+
+  const textoBotao = !ready
+    ? 'Abrindo câmera...'
+    : vidaPendente
+      ? 'A foto sai sozinha ao final'
+      : bloqueado
+        ? 'Enquadre seu rosto'
+        : 'Tirar foto';
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
@@ -262,10 +390,43 @@ const SelfieCapture: React.FC<SelfieCaptureProps> = ({
           />
         )}
 
-        {/* Dica de enquadramento. Só aparece com detector funcionando e
-            enquanto não há rosto: quem já está enquadrado não precisa ler
-            nada. */}
-        {!preview && ready && rostoDetectado === false && (
+        {/* Instrução da prova de vida. É o guia principal da tela enquanto a
+            sequência não termina, por isso ocupa a faixa inferior inteira. */}
+        {!preview && ready && estadoVida && (
+          <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
+            <div className="flex items-center justify-center gap-3 text-white">
+              {estadoVida.etapa === 'desafio' && estadoVida.direcao ? (
+                <span className="animate-pulse">{SETAS[estadoVida.direcao]}</span>
+              ) : estadoVida.etapa === 'concluido' ? (
+                <CheckCircle2 size={22} className="text-green-400" />
+              ) : (
+                <ScanFace size={22} />
+              )}
+              <p className="text-sm font-semibold">{estadoVida.instrucao}</p>
+            </div>
+
+            {estadoVida.dica && (
+              <p className="mt-1.5 text-center text-xs text-white/80">{estadoVida.dica}</p>
+            )}
+
+            {/* Progresso: sem isto a pessoa não sabe quantos movimentos faltam. */}
+            {estadoVida.etapa !== 'concluido' && (
+              <div className="mt-2 flex items-center justify-center gap-1.5">
+                {Array.from({ length: estadoVida.totalMovimentos }).map((_, i) => (
+                  <span
+                    key={i}
+                    className={`h-1.5 rounded-full transition-all ${
+                      i < estadoVida.movimentosFeitos ? 'w-6 bg-green-400' : 'w-3 bg-white/35'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Sem prova de vida, segue a dica antiga de enquadramento. */}
+        {!preview && ready && !estadoVida && rostoDetectado === false && (
           <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/70 to-transparent">
             <p className="flex items-center justify-center gap-2 text-white text-sm font-medium">
               <ScanFace size={18} /> Enquadre seu rosto
@@ -273,6 +434,18 @@ const SelfieCapture: React.FC<SelfieCaptureProps> = ({
           </div>
         )}
       </div>
+
+      {debug && !preview && (
+        <div className="px-4 pt-3 text-[11px] leading-snug text-gray-600 bg-gray-50 border-t border-gray-100">
+          <p className="font-semibold text-gray-800">
+            Diagnóstico · {estadoVida ? estadoVida.etapa : 'prova de vida indisponível'}
+          </p>
+          <p className="font-mono">
+            yaw {pose ? pose.yaw.toFixed(3) : '—'} (limiar ±{AJUSTES_PADRAO.limiarYaw}) · pitch{' '}
+            {pose ? pose.pitch.toFixed(3) : '—'} (limiar ±{AJUSTES_PADRAO.limiarPitch})
+          </p>
+        </div>
+      )}
 
       <div className="p-4 flex gap-3">
         {preview ? (
@@ -295,18 +468,14 @@ const SelfieCapture: React.FC<SelfieCaptureProps> = ({
         ) : (
           <button
             onClick={capture}
-            // rostoDetectado === null significa sem checagem disponível, e aí
-            // a foto é liberada: detector que não carregou não pode impedir o
-            // aluno de marcar presença.
-            disabled={!ready || rostoDetectado === false}
+            // estadoVida null e rostoDetectado null significam sem checagem
+            // disponível, e aí a foto é liberada: o que não carregou não pode
+            // impedir o aluno de marcar presença.
+            disabled={!ready || bloqueado}
             className="w-full px-4 py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            {rostoDetectado === false ? <ScanFace size={18} /> : <Camera size={18} />}
-            {!ready
-              ? 'Abrindo câmera...'
-              : rostoDetectado === false
-                ? 'Enquadre seu rosto'
-                : 'Tirar foto'}
+            {bloqueado ? <ScanFace size={18} /> : <Camera size={18} />}
+            {textoBotao}
           </button>
         )}
       </div>
