@@ -72,11 +72,57 @@ export const AJUSTES_PADRAO: AjustesProvaDeVida = {
 /** Amostras seguidas e estáveis para fixar a pose neutra (~0,8 s a 6 por segundo). */
 const JANELA_CALIBRACAO = 5;
 
-/** Fração do limiar que ainda conta como "de volta ao centro". */
-const FATOR_CENTRO = 0.4;
+/**
+ * Fração do limiar que ainda conta como "de volta ao centro".
+ *
+ * Era 0,4 e exigia voltar quase exatamente à pose calibrada, o que prendia a
+ * pessoa no passo de volta: depois de girar a cabeça ninguém reencontra o
+ * ângulo anterior com essa precisão, e a mão que segura o celular também se
+ * mexe no caminho.
+ */
+const FATOR_CENTRO = 0.6;
+
+/**
+ * Folga no eixo que NÃO foi pedido. Serve só para a foto não sair com o rosto
+ * de lado; cobrar precisão nele travava quem apenas reposicionou o celular
+ * entre um movimento e outro.
+ */
+const FATOR_EIXO_LIVRE = 1.0;
 
 /** Amostras seguidas no centro para o passo de volta ser aceito. */
 const AMOSTRAS_CENTRO = 2;
+
+/**
+ * A pose neutra é reancorada enquanto a pessoa espera o movimento, desde que
+ * ela esteja parada e perto da referência atual.
+ *
+ * Sem isto a referência envelhece: entre ler a instrução na tela e executar o
+ * movimento, quase todo mundo muda a altura do celular e a inclinação do
+ * rosto, e o desafio passa a ser medido contra uma pose que não existe mais.
+ * Era o que travava o passo de volta com o rosto já de frente.
+ *
+ * Isto não abre brecha: girar devagar até a posição pedida faz a referência
+ * acompanhar, e o movimento continua tendo de ser feito por inteiro a partir
+ * de onde a cabeça realmente descansa.
+ */
+const JANELA_REPOUSO = 4;
+/**
+ * Quanto a pose pode oscilar e ainda contar como parada. É a mesma folga da
+ * calibração de propósito: mais apertado aqui significaria que quem conseguiu
+ * calibrar não consegue ser cobrado depois, e tremor de mão em celular é
+ * normal.
+ */
+const ESTABILIDADE_REANCORA = 0.5;
+
+/**
+ * Travado neste passo por tanto tempo: remede a pose neutra do zero.
+ *
+ * É a rede de segurança para o desvio grande, maior do que a reancoragem
+ * acompanha — por exemplo quem calibrou olhando a tela e depois apoiou o
+ * celular em outra altura. Sem isto a pessoa fica presa sem saber por quê.
+ * Os movimentos já cumpridos não são perdidos.
+ */
+const MS_PARA_RECALIBRAR = 8000;
 
 /** Rosto sumido por tantas amostras seguidas reinicia tudo (~1 s). */
 const AMOSTRAS_SEM_ROSTO = 6;
@@ -152,11 +198,29 @@ export function criarProvaDeVida(ajustes: AjustesProvaDeVida = AJUSTES_PADRAO): 
   let janela: PoseCabeca[] = [];
   let semRosto = 0;
   let noCentro = 0;
+  let janelaVolta: PoseCabeca[] = [];
+  let janelaRepouso: PoseCabeca[] = [];
+  let ultimaDirecao: Direcao | null = null;
+  /** Começo do movimento atual; sobrevive à recalibração, ao contrário de `desde`. */
+  let desdeMovimento = Date.now();
+  /** Só vale cobrar o movimento depois de ver a cabeça parada. */
+  let repousoConfirmado = false;
   let desde = Date.now();
 
   const irPara = (nova: EtapaProvaDeVida) => {
     etapa = nova;
     desde = Date.now();
+  };
+
+  /** Remede a pose neutra sem perder os movimentos já cumpridos. */
+  const recalibrar = () => {
+    base = null;
+    janela = [];
+    janelaRepouso = [];
+    repousoConfirmado = false;
+    noCentro = 0;
+    janelaVolta = [];
+    irPara('calibrando');
   };
 
   const reiniciar = () => {
@@ -167,7 +231,12 @@ export function criarProvaDeVida(ajustes: AjustesProvaDeVida = AJUSTES_PADRAO): 
     janela = [];
     semRosto = 0;
     noCentro = 0;
+    janelaVolta = [];
+    janelaRepouso = [];
+    repousoConfirmado = false;
+    ultimaDirecao = null;
     desde = Date.now();
+    desdeMovimento = Date.now();
   };
 
   const estado = (dica: string | null = null): EstadoProvaDeVida => {
@@ -176,11 +245,11 @@ export function criarProvaDeVida(ajustes: AjustesProvaDeVida = AJUSTES_PADRAO): 
       etapa === 'procurando'
         ? 'Enquadre seu rosto'
         : etapa === 'calibrando'
-          ? 'Olhe para a câmera e fique parado'
+          ? 'Fique de frente, parado por um instante'
           : etapa === 'desafio'
             ? INSTRUCOES[sequencia[indice]]
             : etapa === 'voltando'
-              ? 'Volte a olhar para a câmera'
+              ? 'Volte a ficar de frente'
               : 'Pronto!';
 
     return {
@@ -195,7 +264,7 @@ export function criarProvaDeVida(ajustes: AjustesProvaDeVida = AJUSTES_PADRAO): 
 
   /** Dica conforme o tempo parado no mesmo passo. */
   const dicaPorTempo = (comum: string): string | null => {
-    const parado = Date.now() - desde;
+    const parado = Date.now() - desdeMovimento;
     if (parado > MS_PARA_AJUDA) {
       return 'Se não conseguir, peça ao professor para marcar sua presença.';
     }
@@ -247,16 +316,51 @@ export function criarProvaDeVida(ajustes: AjustesProvaDeVida = AJUSTES_PADRAO): 
           reiniciar();
           return estado();
         }
+
+        // Onde a cabeça está descansando AGORA. A referência da calibração
+        // envelhece: entre ler a instrução e executá-la, quase todo mundo muda
+        // a altura do celular e a inclinação do rosto.
+        janelaRepouso = [...janelaRepouso, pose].slice(-JANELA_REPOUSO);
+        if (janelaRepouso.length === JANELA_REPOUSO) {
+          const yaws = janelaRepouso.map((p) => p.yaw);
+          const pitches = janelaRepouso.map((p) => p.pitch);
+          const imovel =
+            amplitude(yaws) < ajustes.limiarYaw * ESTABILIDADE_REANCORA &&
+            amplitude(pitches) < ajustes.limiarPitch * ESTABILIDADE_REANCORA;
+          if (imovel) {
+            base = { yaw: mediana(yaws), pitch: mediana(pitches) };
+            repousoConfirmado = true;
+          }
+        }
+
+        // Travado: remede do zero, sem perder os movimentos já cumpridos.
+        if (Date.now() - desde > MS_PARA_RECALIBRAR) {
+          recalibrar();
+          return estado(dicaPorTempo('Fique parado um instante para reajustar'));
+        }
+
+        // Nada é cobrado antes de ver a pessoa parada: sem isto, uma diferença
+        // entre a pose calibrada e a de repouso contaria como se o movimento
+        // já tivesse sido feito, e bastava segurar o celular noutro ângulo
+        // para ganhar um desafio de graça.
+        if (!repousoConfirmado) {
+          return estado(dicaPorTempo('Fique de frente por um instante'));
+        }
+
         const direcao = sequencia[indice];
         const limiar = direcao === 'esquerda' || direcao === 'direita'
           ? ajustes.limiarYaw
           : ajustes.limiarPitch;
 
         if (desvio(pose, base, direcao) >= limiar) {
+          ultimaDirecao = direcao;
           noCentro = 0;
+          janelaVolta = [];
+          janelaRepouso = [];
           irPara('voltando');
           return estado();
         }
+
         return estado(
           dicaPorTempo('Movimente a cabeça um pouco mais, devagar, sem sair do quadro'),
         );
@@ -267,20 +371,46 @@ export function criarProvaDeVida(ajustes: AjustesProvaDeVida = AJUSTES_PADRAO): 
           reiniciar();
           return estado();
         }
-        const centrado =
-          Math.abs(pose.yaw - base.yaw) < ajustes.limiarYaw * FATOR_CENTRO &&
-          Math.abs(pose.pitch - base.pitch) < ajustes.limiarPitch * FATOR_CENTRO;
 
-        if (!centrado) {
+        // Só o eixo que acabou de ser pedido precisa desfazer o movimento. O
+        // outro leva uma folga larga: o que importa ali é a foto não sair de
+        // lado, não medir precisão.
+        const horizontal = ultimaDirecao === 'esquerda' || ultimaDirecao === 'direita';
+        const desfeito = horizontal
+          ? Math.abs(pose.yaw - base.yaw) < ajustes.limiarYaw * FATOR_CENTRO
+          : Math.abs(pose.pitch - base.pitch) < ajustes.limiarPitch * FATOR_CENTRO;
+        const outroEixoOk = horizontal
+          ? Math.abs(pose.pitch - base.pitch) < ajustes.limiarPitch * FATOR_EIXO_LIVRE
+          : Math.abs(pose.yaw - base.yaw) < ajustes.limiarYaw * FATOR_EIXO_LIVRE;
+
+        if (!desfeito || !outroEixoOk) {
           noCentro = 0;
-          return estado(dicaPorTempo('Olhe de frente para a câmera'));
+          janelaVolta = [];
+          if (Date.now() - desde > MS_PARA_RECALIBRAR) {
+            recalibrar();
+            return estado(dicaPorTempo('Fique parado um instante para reajustar'));
+          }
+          return estado(dicaPorTempo('Centralize o rosto, de frente'));
         }
 
+        janelaVolta = [...janelaVolta, pose].slice(-AMOSTRAS_CENTRO);
         noCentro += 1;
         if (noCentro < AMOSTRAS_CENTRO) return estado();
 
+        // Reancora a pose neutra na posição de agora. Entre um movimento e
+        // outro a pessoa muda a altura do celular e a postura, e cobrar o
+        // movimento seguinte contra uma referência velha vai acumulando erro.
+        base = {
+          yaw: mediana(janelaVolta.map((p) => p.yaw)),
+          pitch: mediana(janelaVolta.map((p) => p.pitch)),
+        };
+
         noCentro = 0;
+        janelaVolta = [];
+        janelaRepouso = [];
+        repousoConfirmado = false;
         indice += 1;
+        desdeMovimento = Date.now();
         // Terminar no centro é de propósito: a foto sai com o rosto de frente.
         irPara(indice >= sequencia.length ? 'concluido' : 'desafio');
         return estado();
